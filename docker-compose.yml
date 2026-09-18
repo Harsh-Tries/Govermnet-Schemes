@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:16-alpine
+    container_name: scheme_assistant_db
+    environment:
+      POSTGRES_DB: scheme_assistant_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password_change_me
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d scheme_assistant_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
