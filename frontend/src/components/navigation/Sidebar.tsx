@@ -11,7 +11,8 @@ import {
   FileText, 
   Bot, 
   Settings,
-  HelpCircle
+  HelpCircle,
+  ShieldCheck
 } from 'lucide-react';
 
 interface NavItem {
@@ -28,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Saved Schemes', href: '/saved', icon: Bookmark },
   { label: 'Documents', href: '/documents', icon: FileText },
   { label: 'AI Assistant', href: '/ai-assistant', icon: Bot, badge: 'Phase 3' },
+  { label: 'Admin Portal', href: '/admin', icon: ShieldCheck, badge: 'Phase 2' },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -45,7 +47,7 @@ export const Sidebar: React.FC = () => {
           <nav className="space-y-1">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
               return (
                 <Link
                   key={item.href}
@@ -67,6 +69,8 @@ export const Sidebar: React.FC = () => {
                           ? 'bg-white/20 text-white'
                           : item.badge === 'Live'
                           ? 'bg-emerald-100 text-emerald-700'
+                          : item.badge === 'Phase 2'
+                          ? 'bg-blue-100 text-blue-700'
                           : 'bg-slate-100 text-slate-600'
                       }`}
                     >
@@ -79,14 +83,14 @@ export const Sidebar: React.FC = () => {
           </nav>
         </div>
 
-        {/* Phase 1 Prototype Status Banner */}
+        {/* Phase 2 Knowledge Base Status Banner */}
         <div className="p-3.5 bg-gov-lightBlue/60 border border-gov-blue/20 rounded-xl text-xs">
           <div className="flex items-center gap-2 font-semibold text-gov-blue mb-1">
-            <span className="w-2 h-2 rounded-full bg-gov-blue animate-pulse"></span>
-            <span>Phase 1 Architecture Shell</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Phase 2 Knowledge Base Live</span>
           </div>
           <p className="text-[11px] text-slate-600 leading-relaxed">
-            Frontend shell & responsive dashboard layout. Deterministic rules & RAG integration scheduled for Phase 2 & 3.
+            Structured rules, verification lifecycles & admin management enabled.
           </p>
         </div>
       </div>
