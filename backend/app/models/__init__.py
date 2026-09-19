@@ -9,6 +9,9 @@ from app.models.application import ApplicationProcess, ApplicationStep
 from app.models.source import OfficialSource, SchemeSource
 from app.models.verification import VerificationRecord, SchemeUpdate, AuditLog
 from app.models.conversation import Conversation, Message
+from app.models.vector import SchemeChunk, SchemeEmbedding
+from app.models.application_tracking import CitizenApplication, ApplicationStatusHistory
+from app.models.analytics import AnalyticsEvent
 
 __all__ = [
     "Base",
@@ -39,5 +42,10 @@ __all__ = [
     "SchemeUpdate",
     "AuditLog",
     "Conversation",
-    "Message"
+    "Message",
+    "SchemeChunk",
+    "SchemeEmbedding",
+    "CitizenApplication",
+    "ApplicationStatusHistory",
+    "AnalyticsEvent"
 ]

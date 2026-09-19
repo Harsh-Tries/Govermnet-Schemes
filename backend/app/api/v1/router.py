@@ -3,7 +3,8 @@ from app.api.v1.endpoints import (
     schemes, taxonomy, eligibility, 
     benefits, documents, application, 
     sources, verification, intelligence,
-    conversations, assistant
+    conversations, assistant, voice,
+    citizen_applications, analytics, health
 )
 
 api_router = APIRouter()
@@ -19,3 +20,7 @@ api_router.include_router(verification.router, tags=["verification"])
 api_router.include_router(intelligence.router, tags=["intelligence"])
 api_router.include_router(conversations.router, tags=["conversations"])
 api_router.include_router(assistant.router, tags=["assistant"])
+api_router.include_router(voice.router, tags=["voice"])
+api_router.include_router(citizen_applications.router, tags=["citizen_applications"])
+api_router.include_router(analytics.router, tags=["analytics"])
+api_router.include_router(health.router, tags=["health"])

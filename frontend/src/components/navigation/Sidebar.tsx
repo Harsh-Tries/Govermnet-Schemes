@@ -12,7 +12,9 @@ import {
   Bot, 
   Settings,
   HelpCircle,
-  ShieldCheck
+  ShieldCheck,
+  BarChart3,
+  Clock
 } from 'lucide-react';
 
 interface NavItem {
@@ -27,9 +29,10 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Explore Schemes', href: '/explore', icon: Compass },
   { label: 'My Eligibility', href: '/eligibility', icon: CheckCircle2, badge: 'Live' },
   { label: 'AI Assistant', href: '/chat', icon: Bot, badge: 'Phase 4 AI' },
+  { label: 'Track Applications', href: '/applications', icon: Clock, badge: 'Phase 5' },
   { label: 'Saved Schemes', href: '/saved', icon: Bookmark },
-  { label: 'Documents', href: '/documents', icon: FileText },
   { label: 'Admin Portal', href: '/admin', icon: ShieldCheck, badge: 'Phase 2' },
+  { label: 'Admin Analytics', href: '/admin/analytics', icon: BarChart3, badge: 'Phase 5' },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 

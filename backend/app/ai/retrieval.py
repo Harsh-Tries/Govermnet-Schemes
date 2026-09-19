@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 from app.enums import SchemeStatus
 from app.models import (
@@ -25,12 +26,15 @@ class SchemeRetriever:
         q = db.query(Scheme).filter(Scheme.status == SchemeStatus.PUBLISHED)
 
         if query:
-            search_term = f"%{query.lower()}%"
-            q = q.filter(
-                (Scheme.name.ilike(search_term)) | 
-                (Scheme.short_description.ilike(search_term)) |
-                (Scheme.slug.ilike(search_term))
-            )
+            terms = [f"%{w.lower()}%" for w in query.split() if len(w) > 1]
+            if not terms:
+                terms = [f"%{query.lower()}%"]
+            filters = []
+            for t in terms:
+                filters.append(Scheme.name.ilike(t))
+                filters.append(Scheme.short_description.ilike(t))
+                filters.append(Scheme.slug.ilike(t))
+            q = q.filter(or_(*filters))
 
         if state_code:
             q = q.join(SchemeState).filter(SchemeState.state_code.ilike(state_code))
