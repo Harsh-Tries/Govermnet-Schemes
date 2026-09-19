@@ -8,6 +8,7 @@ from app.models.document import Document, SchemeDocument
 from app.models.application import ApplicationProcess, ApplicationStep
 from app.models.source import OfficialSource, SchemeSource
 from app.models.verification import VerificationRecord, SchemeUpdate, AuditLog
+from app.models.conversation import Conversation, Message
 
 __all__ = [
     "Base",
@@ -36,5 +37,7 @@ __all__ = [
     "SchemeSource",
     "VerificationRecord",
     "SchemeUpdate",
-    "AuditLog"
+    "AuditLog",
+    "Conversation",
+    "Message"
 ]

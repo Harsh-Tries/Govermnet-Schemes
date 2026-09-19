@@ -1,0 +1,52 @@
+[
+  {
+    "id": "eval_001",
+    "query": "What scholarships can I apply for?",
+    "expected_intent": "SCHEME_SEARCH",
+    "description": "General scheme search for scholarships"
+  },
+  {
+    "id": "eval_002",
+    "query": "I am a farmer in Maharashtra. What schemes are available to me?",
+    "expected_intent": "SCHEME_SEARCH",
+    "expected_entities": {
+      "state_code": "MH",
+      "occupation_type": "FARMER"
+    },
+    "description": "Farmer persona query in Maharashtra"
+  },
+  {
+    "id": "eval_003",
+    "query": "I am a student with family income of 2 lakh. Am I eligible?",
+    "expected_intent": "ELIGIBILITY_CHECK",
+    "expected_entities": {
+      "occupation_type": "STUDENT",
+      "annual_income": 200000
+    },
+    "description": "Eligibility check with partial profile details"
+  },
+  {
+    "id": "eval_004",
+    "query": "Why am I not eligible for the scholarship?",
+    "expected_intent": "WHY_NOT_ELIGIBLE",
+    "description": "Explaining failed eligibility conditions"
+  },
+  {
+    "id": "eval_005",
+    "query": "What documents do I need to apply?",
+    "expected_intent": "DOCUMENT_QUERY",
+    "description": "Document requirements inquiry"
+  },
+  {
+    "id": "eval_006",
+    "query": "How do I apply for MP Post Matric Scholarship?",
+    "expected_intent": "APPLICATION_GUIDANCE",
+    "description": "Application process inquiry"
+  },
+  {
+    "id": "eval_007",
+    "query": "Compare PM-KISAN and PMEGP schemes.",
+    "expected_intent": "COMPARE_SCHEMES",
+    "description": "Scheme comparison query"
+  }
+]

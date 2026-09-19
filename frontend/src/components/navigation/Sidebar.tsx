@@ -26,9 +26,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/', icon: Home },
   { label: 'Explore Schemes', href: '/explore', icon: Compass },
   { label: 'My Eligibility', href: '/eligibility', icon: CheckCircle2, badge: 'Live' },
+  { label: 'AI Assistant', href: '/chat', icon: Bot, badge: 'Phase 4 AI' },
   { label: 'Saved Schemes', href: '/saved', icon: Bookmark },
   { label: 'Documents', href: '/documents', icon: FileText },
-  { label: 'AI Assistant', href: '/ai-assistant', icon: Bot, badge: 'Phase 3' },
   { label: 'Admin Portal', href: '/admin', icon: ShieldCheck, badge: 'Phase 2' },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];

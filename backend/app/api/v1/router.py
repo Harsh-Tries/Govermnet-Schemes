@@ -2,7 +2,8 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     schemes, taxonomy, eligibility, 
     benefits, documents, application, 
-    sources, verification, intelligence
+    sources, verification, intelligence,
+    conversations, assistant
 )
 
 api_router = APIRouter()
@@ -16,3 +17,5 @@ api_router.include_router(application.router, tags=["application"])
 api_router.include_router(sources.router, tags=["sources"])
 api_router.include_router(verification.router, tags=["verification"])
 api_router.include_router(intelligence.router, tags=["intelligence"])
+api_router.include_router(conversations.router, tags=["conversations"])
+api_router.include_router(assistant.router, tags=["assistant"])
