@@ -14,7 +14,8 @@ import {
   HelpCircle,
   ShieldCheck,
   BarChart3,
-  Clock
+  Clock,
+  Sparkles
 } from 'lucide-react';
 
 interface NavItem {
@@ -28,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/', icon: Home },
   { label: 'Explore Schemes', href: '/explore', icon: Compass },
   { label: 'My Eligibility', href: '/eligibility', icon: CheckCircle2, badge: 'Live' },
+  { label: 'Personalized Matches', href: '/recommendations', icon: Sparkles, badge: 'Phase 6' },
   { label: 'AI Assistant', href: '/chat', icon: Bot, badge: 'Phase 4 AI' },
   { label: 'Track Applications', href: '/applications', icon: Clock, badge: 'Phase 5' },
   { label: 'Saved Schemes', href: '/saved', icon: Bookmark },

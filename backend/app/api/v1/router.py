@@ -4,7 +4,9 @@ from app.api.v1.endpoints import (
     benefits, documents, application, 
     sources, verification, intelligence,
     conversations, assistant, voice,
-    citizen_applications, analytics, health
+    citizen_applications, analytics, health,
+    scheme_verification, integrations, personalization,
+    notifications, user_governance
 )
 
 api_router = APIRouter()
@@ -24,3 +26,8 @@ api_router.include_router(voice.router, tags=["voice"])
 api_router.include_router(citizen_applications.router, tags=["citizen_applications"])
 api_router.include_router(analytics.router, tags=["analytics"])
 api_router.include_router(health.router, tags=["health"])
+api_router.include_router(scheme_verification.router, tags=["scheme_verification"])
+api_router.include_router(integrations.router, tags=["integrations"])
+api_router.include_router(personalization.router, tags=["personalization"])
+api_router.include_router(notifications.router, tags=["notifications"])
+api_router.include_router(user_governance.router, tags=["user_governance"])

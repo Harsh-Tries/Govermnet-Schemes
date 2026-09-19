@@ -1,0 +1,23 @@
+[
+  {
+    "query": "I am a college student with family income under 2 lakhs. Are there any scholarships?",
+    "expected_intent": "ELIGIBILITY_CHECK",
+    "expected_category": "SCHOLARSHIP",
+    "expected_schemes": ["post-matric-scholarship-obc"],
+    "expected_eligibility_status": "ELIGIBLE",
+    "min_retrieval_recall": 1.0
+  },
+  {
+    "query": "What documents do I need for PM Kisan Samman Nidhi?",
+    "expected_intent": "DOCUMENT_QUERY",
+    "expected_schemes": ["pm-kisan-samman-nidhi"],
+    "required_document_keywords": ["Aadhaar", "Land Record", "Bank Passbook"],
+    "min_retrieval_recall": 1.0
+  },
+  {
+    "query": "How can I submit an online application for national scholarship?",
+    "expected_intent": "APPLICATION_PROCESS_QUERY",
+    "expected_schemes": ["post-matric-scholarship-obc"],
+    "min_retrieval_recall": 1.0
+  }
+]

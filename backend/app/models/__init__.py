@@ -12,6 +12,9 @@ from app.models.conversation import Conversation, Message
 from app.models.vector import SchemeChunk, SchemeEmbedding
 from app.models.application_tracking import CitizenApplication, ApplicationStatusHistory
 from app.models.analytics import AnalyticsEvent
+from app.models.scheme_version import SchemeVersion
+from app.models.integration import GovernmentIntegration
+from app.models.notification import Notification, NotificationPreference
 
 __all__ = [
     "Base",
@@ -47,5 +50,9 @@ __all__ = [
     "SchemeEmbedding",
     "CitizenApplication",
     "ApplicationStatusHistory",
-    "AnalyticsEvent"
+    "AnalyticsEvent",
+    "SchemeVersion",
+    "GovernmentIntegration",
+    "Notification",
+    "NotificationPreference"
 ]
