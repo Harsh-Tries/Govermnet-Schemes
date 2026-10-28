@@ -1,3 +1,4 @@
+import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import get_db
@@ -73,6 +74,13 @@ async def query_assistant(req: AssistantQueryRequest, db: Session = Depends(get_
             }
         )
         db.add(asst_msg)
+        
+        # Touch conversation updated_at so it sorts to the top of chat history
+        conv = db.query(Conversation).filter(Conversation.id == conv_id).first()
+        if conv:
+            conv.updated_at = datetime.datetime.utcnow()
+            db.add(conv)
+            
         db.commit()
 
         response.conversation_id = conv_id

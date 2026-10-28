@@ -85,3 +85,15 @@ export async function fetchAssistantStatus(): Promise<AssistantStatusDTO | null>
     return null;
   }
 }
+
+export async function deleteConversation(conversationId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/conversations/${conversationId}`, {
+      method: 'DELETE'
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn('Unable to delete conversation:', err);
+    return false;
+  }
+}
