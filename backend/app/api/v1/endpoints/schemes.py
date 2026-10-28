@@ -66,7 +66,7 @@ def list_schemes(
 
 @router.get("/schemes/{scheme_id}", response_model=SchemeResponse)
 def get_scheme_by_id(scheme_id: str, db: Session = Depends(get_db)):
-    scheme = db.query(Scheme).filter(Scheme.id == scheme_id).first()
+    scheme = db.query(Scheme).filter(or_(Scheme.id == scheme_id, Scheme.slug == scheme_id)).first()
     if not scheme:
         raise HTTPException(status_code=404, detail="Scheme not found.")
     return scheme

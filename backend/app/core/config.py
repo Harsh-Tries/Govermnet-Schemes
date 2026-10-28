@@ -1,5 +1,9 @@
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
+
+_ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
+_DEFAULT_DB_FILE = (_ROOT_DIR / "scheme_assistant.db").resolve().as_posix()
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Government Scheme Assistant API"
@@ -10,7 +14,7 @@ class Settings(BaseSettings):
     # Database Settings (Supports SQLite for local tests and PostgreSQL for docker/prod)
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL", 
-        "sqlite:///./scheme_assistant.db"
+        f"sqlite:///{_DEFAULT_DB_FILE}"
     )
 
     class Config:

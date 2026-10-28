@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Scheme } from '../../types/scheme';
 import { ShieldCheck, ExternalLink, Bookmark, CheckCircle, AlertCircle, HelpCircle } from 'lucide-react';
 
@@ -64,9 +65,11 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
         </div>
 
         {/* Scheme Title */}
-        <h4 className="text-base font-bold text-slate-900 group-hover:text-gov-blue transition-colors line-clamp-2 mb-1.5">
-          {scheme.title}
-        </h4>
+        <Link href={`/schemes/${scheme.id || scheme.code}`}>
+          <h4 className="text-base font-bold text-slate-900 group-hover:text-gov-blue transition-colors line-clamp-2 mb-1.5 cursor-pointer">
+            {scheme.title}
+          </h4>
+        </Link>
 
         {/* Ministry Subtitle */}
         <p className="text-xs text-slate-500 font-medium mb-3">
@@ -102,6 +105,12 @@ export const SchemeCard: React.FC<SchemeCardProps> = ({
               {status.text}
             </span>
           )}
+          <Link
+            href={`/schemes/${scheme.id || scheme.code}`}
+            className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+          >
+            Details
+          </Link>
           <a
             href={scheme.officialUrl}
             target="_blank"
