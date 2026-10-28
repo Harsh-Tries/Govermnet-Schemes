@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, RefreshCw, AlertCircle, Sliders } from 'lucide-react';
-import { sendAssistantQuery, fetchConversations, ConversationDTO } from '../../services/chatApi';
+import { Send, Bot, RefreshCw, AlertCircle, ShieldCheck, Cpu } from 'lucide-react';
+import { sendAssistantQuery, fetchConversations, fetchAssistantStatus, ConversationDTO, AssistantStatusDTO } from '../../services/chatApi';
 import { ChatMessage, ChatMessageData } from '../../components/chat/ChatMessage';
 import { SuggestedQuestions } from '../../components/chat/SuggestedQuestions';
 
@@ -11,7 +11,7 @@ export default function ChatPage() {
     {
       id: 'welcome',
       role: 'ASSISTANT',
-      content: 'Namaste! I am the AI Government Scheme Assistant. Ask me anything about Indian government schemes, scholarships, eligibility requirements, documents, or application procedures.'
+      content: 'Namaste! I am the AI Maharashtra Government Schemes Assistant. Ask me anything about genuine welfare schemes, scholarships, eligibility requirements, official document checklists, or application procedures.'
     }
   ]);
   const [inputValue, setInputValue] = useState<string>('');
@@ -19,6 +19,7 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [conversations, setConversations] = useState<ConversationDTO[]>([]);
+  const [assistantStatus, setAssistantStatus] = useState<AssistantStatusDTO | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -32,11 +33,17 @@ export default function ChatPage() {
 
   useEffect(() => {
     loadConversationHistory();
+    loadAssistantStatus();
   }, []);
 
   const loadConversationHistory = async () => {
     const list = await fetchConversations();
     setConversations(list);
+  };
+
+  const loadAssistantStatus = async () => {
+    const st = await fetchAssistantStatus();
+    setAssistantStatus(st);
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -59,6 +66,10 @@ export default function ChatPage() {
 
       if (resp.conversation_id) {
         setConversationId(resp.conversation_id);
+      }
+
+      if (resp.provider_info) {
+        setAssistantStatus(resp.provider_info);
       }
 
       const asstMsgId = `asst-${Date.now()}`;
@@ -86,6 +97,13 @@ export default function ChatPage() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   const handleProfileUpdateFromCard = (updatedValues: Record<string, any>) => {
     const paramSummary = Object.entries(updatedValues)
       .map(([k, v]) => `${k.replace(/_/g, ' ')} is ${v}`)
@@ -104,7 +122,7 @@ export default function ChatPage() {
               setMessages([{
                 id: 'welcome',
                 role: 'ASSISTANT',
-                content: 'Namaste! How can I help you discover government schemes today?'
+                content: 'Namaste! How can I help you discover Maharashtra government schemes today?'
               }]);
               setConversationId(undefined);
             }}
@@ -141,15 +159,40 @@ export default function ChatPage() {
 
       {/* Main Conversational Feed & Input */}
       <div className="flex-1 flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-        {/* Header */}
+        {/* Header with Provider Health Badge */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-sm">
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-900">AI Government Scheme Assistant</h2>
-              <p className="text-[11px] text-slate-500">Source-Grounded • Deterministic Eligibility • Verified Official Citations</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-slate-900">Maharashtra Schemes AI Assistant</h2>
+                {assistantStatus && (
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                      assistantStatus.is_mock
+                        ? 'bg-amber-50 text-amber-800 border-amber-200'
+                        : assistantStatus.status === 'READY'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        : 'bg-rose-50 text-rose-800 border-rose-200'
+                    }`}
+                  >
+                    {assistantStatus.is_mock ? (
+                      <>
+                        <Cpu className="w-3 h-3 text-amber-600" />
+                        <span>Development Mock Mode</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                        <span>Live OpenAI ({assistantStatus.model})</span>
+                      </>
+                    )}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500">Source-Grounded • Deterministic Eligibility • Official .gov.in Sources</p>
             </div>
           </div>
         </div>
@@ -192,19 +235,20 @@ export default function ChatPage() {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="flex items-center gap-2 pt-1"
+            className="flex items-end gap-2 pt-1"
           >
-            <input
-              type="text"
-              placeholder="Ask about scholarships, farmer support, required documents, or eligibility..."
+            <textarea
+              rows={2}
+              placeholder="Ask about scholarships, Ladki Bahin, Namo Shetkari, eligibility, documents... (Press Enter to send, Shift+Enter for new line)"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              className="flex-1 px-4 py-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-gov-blue focus:outline-none shadow-sm"
+              onKeyDown={handleKeyDown}
+              className="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-gov-blue focus:outline-none shadow-sm resize-none"
             />
             <button
               type="submit"
               disabled={isLoading || !inputValue.trim()}
-              className="px-5 py-3 bg-gov-blue hover:bg-gov-blue/90 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm"
+              className="px-5 py-3 bg-gov-blue hover:bg-gov-blue/90 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm h-11"
             >
               <span>Send</span>
               <Send className="w-3.5 h-3.5" />

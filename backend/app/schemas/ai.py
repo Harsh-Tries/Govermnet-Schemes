@@ -14,6 +14,10 @@ class AssistantIntent(str, Enum):
     WHY_NOT_ELIGIBLE = "WHY_NOT_ELIGIBLE"
     GENERAL_GOVERNMENT_SCHEME_QUERY = "GENERAL_GOVERNMENT_SCHEME_QUERY"
     CLARIFICATION_REQUIRED = "CLARIFICATION_REQUIRED"
+    GREETING = "GREETING"
+    OFFICIAL_SOURCE_QUERY = "OFFICIAL_SOURCE_QUERY"
+    OUT_OF_SCOPE = "OUT_OF_SCOPE"
+    UNKNOWN = "UNKNOWN"
 
 class IntentDetectionResult(BaseModel):
     intent: AssistantIntent
@@ -53,3 +57,4 @@ class AssistantQueryResponse(BaseModel):
     sources: list[SourceInfoDTO] = Field(default_factory=list)
     requires_clarification: bool = False
     conversation_id: str | None = None
+    provider_info: dict[str, Any] | None = None

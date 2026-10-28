@@ -6,6 +6,14 @@ export interface SourceDTO {
   last_verified?: string;
 }
 
+export interface AssistantStatusDTO {
+  provider: string;
+  model: string;
+  is_mock: boolean;
+  status: string;
+  message?: string;
+}
+
 export interface AssistantQueryResponseDTO {
   message: string;
   intent: string;
@@ -15,6 +23,7 @@ export interface AssistantQueryResponseDTO {
   sources: SourceDTO[];
   requires_clarification: boolean;
   conversation_id?: string;
+  provider_info?: AssistantStatusDTO;
 }
 
 export interface ConversationDTO {
@@ -63,5 +72,16 @@ export async function fetchConversations(): Promise<ConversationDTO[]> {
   } catch (err) {
     console.warn('Unable to fetch conversations list:', err);
     return [];
+  }
+}
+
+export async function fetchAssistantStatus(): Promise<AssistantStatusDTO | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/assistant/status`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.warn('Unable to fetch assistant status:', err);
+    return null;
   }
 }

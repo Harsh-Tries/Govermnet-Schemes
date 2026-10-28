@@ -29,15 +29,17 @@ class VectorSearchService:
         from app.services.vector.chunker import SchemeChunkerService
         llm = get_llm_provider()
 
-        # Delete old chunks
-        db.query(SchemeChunk).filter(SchemeChunk.scheme_id == scheme.id).delete()
-        db.commit()
+        # Cleanly delete any existing chunks and embeddings for this scheme
+        existing_chunks = db.query(SchemeChunk).filter(SchemeChunk.scheme_id == scheme.id).all()
+        for oc in existing_chunks:
+            db.query(SchemeEmbedding).filter(SchemeEmbedding.chunk_id == oc.id).delete()
+            db.delete(oc)
+        db.flush()
 
         chunks = SchemeChunkerService.create_chunks_for_scheme(scheme)
         for c in chunks:
             db.add(c)
-            db.commit()
-            db.refresh(c)
+            db.flush()
 
             emb_vector = await llm.generate_embedding(c.content)
             emb = SchemeEmbedding(

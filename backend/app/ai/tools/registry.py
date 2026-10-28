@@ -1,5 +1,6 @@
 from typing import Any
 from sqlalchemy.orm import Session
+from app.models import EligibilityParameter
 from app.ai.retrieval import SchemeRetriever
 from app.services.eligibility.evaluator import DeterministicEligibilityEvaluator
 from app.services.eligibility.explanation import ExplanationGenerator
@@ -40,7 +41,14 @@ class ControlledToolRegistry:
         official_src = sources[0] if sources else None
         verified_date = s.published_at.strftime("%Y-%m-%d") if s.published_at else None
 
-        benefits = [{"title": b.title, "description": b.description, "amount": b.amount_financial_benefit} for b in s.benefits]
+        benefits = [{
+            "title": b.title, 
+            "description": b.description, 
+            "amount": b.amount,
+            "amount_unit": b.amount_unit,
+            "frequency": b.frequency,
+            "conditions": b.conditions
+        } for b in s.benefits]
         documents = [{"name": doc.document.name if doc.document else "Document", "is_mandatory": doc.mandatory, "condition": doc.condition} for doc in s.documents]
         
         apps = []
@@ -72,7 +80,8 @@ class ControlledToolRegistry:
             s = SchemeRetriever.get_published_scheme_by_id_or_name(db, scheme_id)
             if not s:
                 return []
-            param_map = ProfileCompletenessService._get_param_map(db)
+            params = db.query(EligibilityParameter).all()
+            param_map = {p.name: p for p in params}
             res = DeterministicEligibilityEvaluator.evaluate_scheme(s, profile_data, param_map)
             ExplanationGenerator.generate_explanations(res)
             return [res.model_dump()]

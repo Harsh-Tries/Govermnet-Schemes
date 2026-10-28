@@ -41,7 +41,7 @@ class SchemeChunkerService:
 
         # 3. Benefits Chunk
         if scheme.benefits:
-            benefit_texts = [f"{b.title}: {b.description or ''} (Amount: {b.amount_financial_benefit or 'N/A'})" for b in scheme.benefits]
+            benefit_texts = [f"{b.title}: {b.description or ''} (Amount: {b.amount or 'N/A'} {b.amount_unit or ''})" for b in scheme.benefits]
             benefit_content = f"Benefits of {scheme.name}:\n" + "\n".join(benefit_texts)
             chunks.append(SchemeChunk(
                 scheme_id=scheme.id,

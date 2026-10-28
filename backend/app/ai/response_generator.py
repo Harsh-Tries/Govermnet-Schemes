@@ -18,12 +18,16 @@ class ResponseGenerator:
         intent: AssistantIntent,
         tool_results: list[dict[str, Any]],
         eligibility_results: list[dict[str, Any]],
-        conversation_id: str | None = None
+        conversation_id: str | None = None,
+        provider_info: dict[str, Any] | None = None
     ) -> AssistantQueryResponse:
         sources: list[SourceInfoDTO] = []
         schemes_metadata: list[dict[str, Any]] = []
         missing_info: list[str] = []
         requires_clarification = False
+
+        if provider_info is None:
+            provider_info = llm_provider.get_provider_info()
 
         # Collect sources and metadata
         for t in tool_results:
@@ -33,6 +37,20 @@ class ResponseGenerator:
                     url=t["official_source"],
                     last_verified=t.get("last_verified_date")
                 ))
+            if "sources" in t and isinstance(t["sources"], list):
+                for s_item in t["sources"]:
+                    if isinstance(s_item, dict) and "url" in s_item:
+                        sources.append(SourceInfoDTO(
+                            title=s_item.get("title", f"Official Portal - {t.get('name', 'Scheme')}"),
+                            url=s_item["url"],
+                            last_verified=t.get("last_verified_date")
+                        ))
+                    elif isinstance(s_item, str):
+                        sources.append(SourceInfoDTO(
+                            title=f"Official Portal - {t.get('name', 'Scheme')}",
+                            url=s_item,
+                            last_verified=t.get("last_verified_date")
+                        ))
             schemes_metadata.append(t)
 
         # Check eligibility results for UNKNOWN states and failed conditions
@@ -48,9 +66,46 @@ class ResponseGenerator:
                 ))
 
         # Remove duplicate sources
-        unique_sources = {s.url: s for s in sources}.values()
+        unique_sources = list({s.url: s for s in sources}.values())
 
-        # Handle specific intent response formatting
+        # 1. Handle Greetings
+        if intent == AssistantIntent.GREETING:
+            greeting_msg = (
+                "Namaste! I am the Maharashtra Government Schemes and Scholarships Assistant. "
+                "I can help you explore verified State and Central welfare schemes, evaluate your eligibility "
+                "against official guidelines, and provide application procedures and required document checklists."
+            )
+            return AssistantQueryResponse(
+                message=greeting_msg,
+                intent=intent,
+                schemes=[],
+                eligibility_results=[],
+                missing_information=[],
+                sources=[],
+                requires_clarification=False,
+                conversation_id=conversation_id,
+                provider_info=provider_info
+            )
+
+        # 2. Handle Out-of-Scope
+        if intent == AssistantIntent.OUT_OF_SCOPE:
+            out_scope_msg = (
+                "I specialize exclusively in Indian government schemes, scholarships, and citizen welfare programs "
+                "(with focused expertise on Maharashtra). Please ask a question related to schemes, citizen eligibility, or government benefits."
+            )
+            return AssistantQueryResponse(
+                message=out_scope_msg,
+                intent=intent,
+                schemes=[],
+                eligibility_results=[],
+                missing_information=[],
+                sources=[],
+                requires_clarification=False,
+                conversation_id=conversation_id,
+                provider_info=provider_info
+            )
+
+        # 3. Handle Clarification Required
         if intent == AssistantIntent.CLARIFICATION_REQUIRED or (requires_clarification and missing_info):
             scheme_name = eligibility_results[0].get("scheme_name", "this scheme") if eligibility_results else "government schemes"
             clarification_msg = ClarificationEngine.generate_clarification_prompt(scheme_name, list(set(missing_info)))
@@ -60,13 +115,38 @@ class ResponseGenerator:
                 schemes=schemes_metadata,
                 eligibility_results=eligibility_results,
                 missing_information=list(set(missing_info)),
-                sources=list(unique_sources),
+                sources=unique_sources,
                 requires_clarification=True,
-                conversation_id=conversation_id
+                conversation_id=conversation_id,
+                provider_info=provider_info
             )
 
-        # Build grounded context string
-        context_str = f"USER QUERY: {query}\nINTENT: {intent.value}\nVERIFIED TOOL RESULTS:\n{tool_results}\nPHASE 3 ELIGIBILITY RESULTS:\n{eligibility_results}"
+        # 4. Handle Empty Retrieval Search
+        if intent in [AssistantIntent.SCHEME_SEARCH, AssistantIntent.SCHEME_DETAILS, AssistantIntent.GENERAL_GOVERNMENT_SCHEME_QUERY] and not tool_results and not eligibility_results:
+            empty_msg = (
+                "We could not find any verified government schemes in our knowledge base matching your query. "
+                "Please check the spelling or keywords, or explore our verified Maharashtra catalog covering Scholarships, "
+                "Agriculture, Women & Child, Health, and Housing schemes."
+            )
+            return AssistantQueryResponse(
+                message=empty_msg,
+                intent=intent,
+                schemes=[],
+                eligibility_results=[],
+                missing_information=[],
+                sources=[],
+                requires_clarification=False,
+                conversation_id=conversation_id,
+                provider_info=provider_info
+            )
+
+        # 5. Build grounded context string
+        context_str = (
+            f"USER QUERY: {query}\n"
+            f"INTENT: {intent.value}\n"
+            f"VERIFIED TOOL RESULTS:\n{tool_results}\n"
+            f"PHASE 3 ELIGIBILITY RESULTS:\n{eligibility_results}"
+        )
 
         messages = [
             {"role": "user", "content": context_str}
@@ -84,7 +164,8 @@ class ResponseGenerator:
             schemes=schemes_metadata,
             eligibility_results=eligibility_results,
             missing_information=list(set(missing_info)),
-            sources=list(unique_sources),
+            sources=unique_sources,
             requires_clarification=requires_clarification,
-            conversation_id=conversation_id
+            conversation_id=conversation_id,
+            provider_info=provider_info
         )
