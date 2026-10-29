@@ -13,7 +13,7 @@ import {
   toggleSchemeBookmark 
 } from '../services/schemesApi';
 import { authStorage } from '../services/authApi';
-import { fetchProfile, UserProfileData } from '../services/profileApi';
+import { fetchProfile, fetchRankedDashboard, UserProfileData, RankedDashboardResponse } from '../services/profileApi';
 import { Scheme } from '../types/scheme';
 import { 
   Search, 
@@ -36,6 +36,7 @@ export default function HomePage() {
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>('ALL');
   const [citizenProfile, setCitizenProfile] = useState<UserProfileData | null>(null);
+  const [rankedData, setRankedData] = useState<RankedDashboardResponse | null>(null);
 
   // Filter panel state
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState<boolean>(false);
@@ -76,6 +77,9 @@ export default function HomePage() {
     fetchProfile()
       .then((p) => setCitizenProfile(p))
       .catch(() => {});
+    fetchRankedDashboard()
+      .then((r) => setRankedData(r))
+      .catch((err) => console.warn('Could not load ranked schemes:', err));
   }, []);
 
   useEffect(() => {
@@ -207,7 +211,91 @@ export default function HomePage() {
         <AiInputPlaceholder />
       </section>
 
-      {/* 5. Explore Verified Schemes Dashboard Feed */}
+      {/* 5. Recommended for Your Profile (Personalized Deterministic Priority Section) */}
+      {rankedData && rankedData.ranked_schemes && rankedData.ranked_schemes.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-gov-blue/10 text-gov-blue flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-900">Recommended for Your Profile</h2>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Personalized Priority Ranking
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Evaluated deterministically against official Maharashtra government rules &amp; verified application portals
+              </p>
+            </div>
+
+            <Link
+              href="/recommendations"
+              className="text-xs font-bold text-gov-blue hover:underline flex items-center gap-1"
+            >
+              <span>View Full Evaluation Matrix</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {/* Profile Summary Strip */}
+          {rankedData.profile_summary?.summary_bullets && rankedData.profile_summary.summary_bullets.length > 0 && (
+            <div className="p-3 bg-gov-lightBlue/40 border border-gov-blue/20 rounded-2xl flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-bold text-gov-blue mr-1">Evaluated Profile:</span>
+              {rankedData.profile_summary.summary_bullets.map((bullet, idx) => (
+                <span
+                  key={idx}
+                  className="bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-slate-700 font-medium shadow-2xs"
+                >
+                  {bullet}
+                </span>
+              ))}
+              <Link
+                href="/onboarding"
+                className="ml-auto text-xs font-semibold text-gov-blue hover:underline"
+              >
+                Edit Parameters →
+              </Link>
+            </div>
+          )}
+
+          {/* Top Ranked Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rankedData.ranked_schemes.slice(0, 6).map((rec: any) => (
+              <SchemeCard
+                key={rec.scheme_id}
+                scheme={{
+                  id: rec.scheme_id,
+                  slug: rec.slug,
+                  name: rec.scheme_name,
+                  title: rec.scheme_name,
+                  short_description: rec.short_description,
+                  summary: rec.short_description,
+                  government_level: rec.government_level,
+                  department: rec.department,
+                  ministry: rec.department,
+                  benefitAmount: rec.benefit_amount,
+                  officialUrl: rec.official_url,
+                  verified: rec.verified,
+                  categories: [],
+                  eligibilityStatus: rec.eligibility_status,
+                  match_score: rec.match_score,
+                  explanation_factors: rec.explanation_factors,
+                  review_notes: rec.review_notes,
+                  portal_name: rec.portal_name,
+                  action_label: rec.action_label,
+                  is_direct_application: rec.is_direct_application
+                } as any}
+                onBookmarkToggle={toggleBookmark}
+                isBookmarked={bookmarkedIds.includes(rec.scheme_id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 6. Explore Verified Schemes Dashboard Feed */}
       <section className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
           <div>

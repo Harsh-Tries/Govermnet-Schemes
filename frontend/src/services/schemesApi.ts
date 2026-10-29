@@ -27,14 +27,80 @@ export function formatBenefitCeiling(scheme: any): string {
   return 'Direct Government Assistance';
 }
 
-export function getOfficialSchemeUrl(scheme: any): string | null {
-  if (scheme.officialUrl) return scheme.officialUrl;
-  if (scheme.application_process?.official_application_url) {
-    return scheme.application_process.official_application_url;
+export function isSafeGovUrl(url: string | null | undefined): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:') || trimmed.startsWith('file:')) {
+    return false;
   }
-  if (scheme.sources && scheme.sources.length > 0) {
+  return trimmed.startsWith('https://') || trimmed.startsWith('http://');
+}
+
+export function getVerifiedPortalInfo(url: string | null | undefined): {
+  portalName: string;
+  isDirectApp: boolean;
+  actionLabel: string;
+} {
+  if (!url || !isSafeGovUrl(url)) {
+    return {
+      portalName: 'Official Portal',
+      isDirectApp: false,
+      actionLabel: 'Official Portal Unavailable'
+    };
+  }
+
+  const u = url.toLowerCase();
+  if (u.includes('mahadbt2.maharashtra.gov.in')) {
+    return { portalName: 'MahaDBT 2.0 (AY 2026-27)', isDirectApp: true, actionLabel: 'Apply on MahaDBT 2.0' };
+  }
+  if (u.includes('mahadbt.maharashtra.gov.in/farmer')) {
+    return { portalName: 'MahaDBT Farmer Portal', isDirectApp: true, actionLabel: 'Apply on MahaDBT Farmer' };
+  }
+  if (u.includes('mahadbt.maharashtra.gov.in')) {
+    return { portalName: 'MahaDBT Portal', isDirectApp: true, actionLabel: 'Apply on MahaDBT' };
+  }
+  if (u.includes('dte.maharashtra.gov.in')) {
+    return { portalName: 'Maharashtra DTE', isDirectApp: false, actionLabel: 'View DTE Guidelines' };
+  }
+  if (u.includes('pmkisan.gov.in')) {
+    return { portalName: 'PM-KISAN Portal', isDirectApp: true, actionLabel: 'Apply on PM-KISAN' };
+  }
+  if (u.includes('krishi.maharashtra.gov.in')) {
+    return { portalName: 'Maharashtra Krishi', isDirectApp: true, actionLabel: 'Apply on Krishi Portal' };
+  }
+  if (u.includes('maha-cmegp.gov.in')) {
+    return { portalName: 'CMEGP Maharashtra', isDirectApp: true, actionLabel: 'Apply on CMEGP Portal' };
+  }
+  if (u.includes('aaplesarkar.mahaonline.gov.in')) {
+    return { portalName: 'Aaple Sarkar', isDirectApp: true, actionLabel: 'Apply on Aaple Sarkar' };
+  }
+  if (u.includes('pmfby.gov.in')) {
+    return { portalName: 'PMFBY Portal', isDirectApp: true, actionLabel: 'Apply on PMFBY' };
+  }
+  if (u.includes('jeevandayee.gov.in')) {
+    return { portalName: 'MJPJAY Portal', isDirectApp: true, actionLabel: 'Apply on MJPJAY' };
+  }
+  if (u.includes('beneficiary.nha.gov.in') || u.includes('pmjay.gov.in')) {
+    return { portalName: 'Ayushman PM-JAY', isDirectApp: true, actionLabel: 'Apply on PM-JAY' };
+  }
+  if (u.includes('ladakibahin.maharashtra.gov.in')) {
+    return { portalName: 'Ladki Bahin Portal', isDirectApp: true, actionLabel: 'Apply on Ladki Bahin' };
+  }
+  return { portalName: 'Official Government Portal', isDirectApp: true, actionLabel: 'Apply via Official Portal' };
+}
+
+export function getOfficialSchemeUrl(scheme: any): string | null {
+  let candidate: string | null = null;
+  if (scheme.officialUrl) candidate = scheme.officialUrl;
+  else if (scheme.application_process?.official_application_url) {
+    candidate = scheme.application_process.official_application_url;
+  } else if (scheme.sources && scheme.sources.length > 0) {
     const s = scheme.sources.find((src: any) => src.source?.url);
-    if (s?.source?.url) return s.source.url;
+    if (s?.source?.url) candidate = s.source.url;
+  }
+
+  if (candidate && isSafeGovUrl(candidate)) {
+    return candidate.trim();
   }
   return null;
 }

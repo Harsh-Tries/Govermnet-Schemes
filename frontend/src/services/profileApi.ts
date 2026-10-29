@@ -71,14 +71,38 @@ export interface RecommendationItem {
   slug?: string;
   short_description?: string;
   government_level: string;
+  department?: string;
+  benefit_amount?: string;
   eligibility_status: string;
   match_score: number;
   explanation_factors: string[];
+  review_notes?: string[];
   missing_information: string[];
   official_url?: string;
+  portal_name?: string;
+  action_label?: string;
+  is_direct_application?: boolean;
   benefit_summary?: string;
   categories?: string[];
   verified?: boolean;
+}
+
+export interface RankedProfileSummary {
+  name: string;
+  is_maharashtra_resident: boolean;
+  is_farmer: boolean;
+  is_student: boolean;
+  occupation: string;
+  caste_category: string;
+  annual_income: number;
+  district: string;
+  summary_bullets: string[];
+}
+
+export interface RankedDashboardResponse {
+  profile_summary: RankedProfileSummary;
+  total_ranked: number;
+  ranked_schemes: RecommendationItem[];
 }
 
 export interface RecommendationsResponse {
@@ -160,6 +184,18 @@ export async function fetchPersonalizedRecommendations(): Promise<Recommendation
 
   if (!res.ok) {
     throw new Error(`Failed to load recommendations (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function fetchRankedDashboard(): Promise<RankedDashboardResponse> {
+  const res = await fetch(`${API_BASE_URL}/profile/ranking`, {
+    headers: getAuthHeaders(),
+    cache: 'no-store'
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to load ranked schemes (${res.status})`);
   }
   return res.json();
 }
