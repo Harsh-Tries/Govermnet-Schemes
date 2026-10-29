@@ -201,6 +201,33 @@ export async function fetchBookmarkedSchemeIds(userId: string = 'demo-citizen-us
   }
 }
 
+export async function fetchBookmarkedSchemes(userId: string = 'demo-citizen-user'): Promise<Scheme[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookmarks?user_id=${encodeURIComponent(userId)}`, {
+      cache: 'no-store'
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map(normalizeScheme);
+      }
+    }
+  } catch (err) {
+    console.warn('Error fetching bookmarked schemes from /bookmarks:', err);
+  }
+
+  // Fallback: fetch IDs and filter from published schemes
+  try {
+    const ids = await fetchBookmarkedSchemeIds(userId);
+    if (ids.length === 0) return [];
+    const all = await fetchPublishedSchemes();
+    return all.filter((s: Scheme) => ids.includes(s.id));
+  } catch (fallbackErr) {
+    console.error('Failed to load bookmarked schemes via fallback:', fallbackErr);
+    return [];
+  }
+}
+
 export async function toggleSchemeBookmark(
   schemeId: string,
   isCurrentlyBookmarked: boolean,
