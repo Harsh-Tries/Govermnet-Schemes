@@ -160,7 +160,7 @@ function ExploreContent() {
             </span>
             <span className="flex items-center gap-1.5">
               <Database className="w-4 h-4 text-sky-400" />
-              Live Knowledge Base
+              Official Directory
             </span>
           </div>
         </div>

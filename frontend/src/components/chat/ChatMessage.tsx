@@ -81,7 +81,7 @@ export function ChatMessage({ message, onUpdateProfile }: Props) {
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>Phase 3 Deterministic Eligibility Results</span>
+              <span>Deterministic Eligibility Results</span>
             </h4>
             {message.eligibility_results.map((res: any, idx: number) => (
               <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">

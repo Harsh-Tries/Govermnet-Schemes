@@ -141,7 +141,7 @@ export default function AdminDashboardPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-gov-blue bg-gov-lightBlue px-2 py-0.5 rounded">
-              Phase 2 Knowledge Base
+              Scheme Directory
             </span>
             <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
               Admin Portal

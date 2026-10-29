@@ -181,7 +181,6 @@ export default function HomePage() {
               description="Run the deterministic rules engine against your socio-economic profile."
               icon={CheckCircle2}
               colorScheme="emerald"
-              countBadge="Live Engine"
             />
           </Link>
 
@@ -200,7 +199,7 @@ export default function HomePage() {
               description="View and track your bookmarked schemes and official application document checklists."
               icon={Bookmark}
               colorScheme="purple"
-              countBadge={`${bookmarkedIds.length} Saved`}
+              countBadge={bookmarkedIds.length > 0 ? `${bookmarkedIds.length} Saved` : undefined}
             />
           </Link>
         </div>

@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Globe, User, Settings, Bell, Landmark, LogOut, Sparkles, UserCheck } from 'lucide-react';
+import { Search, Globe, User, Bell, Landmark, LogOut, Sparkles, UserCheck, Menu, X } from 'lucide-react';
 import { authStorage, getCurrentUser, logoutCitizen, UserSession } from '../../services/authApi';
+import { useNavigation } from '../../context/NavigationContext';
 
 export const TopNav: React.FC = () => {
   const router = useRouter();
+  const { isMobileSidebarOpen, toggleMobileSidebar } = useNavigation();
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState<UserSession | null>(null);
@@ -42,21 +44,34 @@ export const TopNav: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 lg:px-8 py-3 flex items-center justify-between shadow-card">
-      {/* Brand Logo & Name */}
-      <Link href="/" className="flex items-center gap-3 group">
-        <div className="w-9 h-9 rounded-xl bg-gov-blue text-white flex items-center justify-center shadow-md shadow-gov-blue/20 group-hover:scale-105 transition-transform">
-          <Landmark className="w-5 h-5" />
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-slate-900 text-base tracking-tight leading-none">Government Scheme Assistant</span>
-            <span className="text-[10px] font-semibold tracking-wider text-gov-blue bg-gov-lightBlue px-1.5 py-0.5 rounded border border-gov-blue/20">
-              MAHARASHTRA
-            </span>
+      <div className="flex items-center gap-3">
+        {/* Mobile Sidebar Hamburger Toggle */}
+        <button
+          type="button"
+          onClick={toggleMobileSidebar}
+          className="p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg md:hidden transition-colors focus:outline-none focus:ring-2 focus:ring-gov-blue/20"
+          aria-label={isMobileSidebarOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={isMobileSidebarOpen}
+        >
+          {isMobileSidebarOpen ? <X className="w-5 h-5 text-slate-800" /> : <Menu className="w-5 h-5 text-slate-800" />}
+        </button>
+
+        {/* Brand Logo & Name */}
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="w-9 h-9 rounded-xl bg-gov-blue text-white flex items-center justify-center shadow-md shadow-gov-blue/20 group-hover:scale-105 transition-transform">
+            <Landmark className="w-5 h-5" />
           </div>
-          <p className="text-[11px] text-slate-500 hidden sm:block">Welfare &amp; Scholarship Deterministic Eligibility Engine</p>
-        </div>
-      </Link>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-slate-900 text-sm sm:text-base tracking-tight leading-none">Government Scheme Assistant</span>
+              <span className="text-[10px] font-semibold tracking-wider text-gov-blue bg-gov-lightBlue px-1.5 py-0.5 rounded border border-gov-blue/20">
+                MAHARASHTRA
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 hidden sm:block">Welfare &amp; Scholarship Deterministic Eligibility Engine</p>
+          </div>
+        </Link>
+      </div>
 
       {/* Center Search Input */}
       <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
@@ -75,7 +90,7 @@ export const TopNav: React.FC = () => {
       {/* Right Action Menu */}
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Language Selector */}
-        <div className="relative flex items-center">
+        <div className="relative hidden sm:flex items-center">
           <Globe className="w-4 h-4 text-slate-500 absolute left-2.5 pointer-events-none" />
           <select
             value={selectedLanguage}

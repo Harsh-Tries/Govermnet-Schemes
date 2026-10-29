@@ -7,8 +7,8 @@ import { SchemeMatchCard } from '../../components/eligibility/SchemeMatchCard';
 
 export default function EligibilityPage() {
   const [profile, setProfile] = useState<Record<string, any>>({
-    age: 20,
-    state_code: 'MP',
+    age: 21,
+    state_code: 'IN-MH',
     annual_income: 220000,
     occupation_type: 'STUDENT',
     caste_category: 'OBC',

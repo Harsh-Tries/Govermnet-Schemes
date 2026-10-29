@@ -75,7 +75,7 @@ export default function AdminAnalyticsPage() {
                 <HelpCircle className="w-4 h-4 text-amber-500" />
                 <span>Missing Citizen Profile Parameters (UNKNOWN Cause Analysis)</span>
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">Top parameters missing when Phase 3 returns UNKNOWN status</p>
+              <p className="text-xs text-slate-500 mt-0.5">Top parameters missing when eligibility engine returns review needed status</p>
             </div>
           </div>
 
