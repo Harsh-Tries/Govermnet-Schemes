@@ -27,6 +27,20 @@ class DeterministicEligibilityEvaluator:
         # State code alias lookup
         if parameter_name == "state" and "state_code" in profile_data:
             return profile_data["state_code"]
+        if parameter_name == "state_code" and "state" in profile_data:
+            return profile_data["state"]
+
+        # Income alias lookup
+        if parameter_name == "annual_income" and "annual_family_income" in profile_data:
+            return profile_data["annual_family_income"]
+        if parameter_name == "annual_family_income" and "annual_income" in profile_data:
+            return profile_data["annual_income"]
+
+        # Education level alias lookup
+        if parameter_name == "course_level" and "education_level" in profile_data:
+            return profile_data["education_level"]
+        if parameter_name == "education_level" and "course_level" in profile_data:
+            return profile_data["course_level"]
 
         # Occupation / Beneficiary type alias lookup
         if parameter_name == "student_status" and "occupation_type" in profile_data:

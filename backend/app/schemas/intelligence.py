@@ -34,18 +34,50 @@ class SchemeEvaluationResult(BaseModel):
     official_source: str | None = None
     last_verified_date: str | None = None
     
-    # Metadata details for UI cards
+    # Metadata details for UI cards & filters
     short_description: str | None = None
+    department: str | None = None
+    category: str | None = None
     beneficiary_types: list[str] = []
     categories: list[str] = []
     benefits: list[dict] = []
+    education_levels: list[str] = []
+    benefit_type: str | None = None
+    benefit_description: str | None = None
+    official_portal_url: str | None = None
+    is_recommended: bool = False
+    match_reasons: list[str] = []
 
     model_config = ConfigDict(from_attributes=True)
 
 class MatchingResponse(BaseModel):
+    total_schemes_evaluated: int = 0
+    eligible_count: int = 0
+    not_eligible_count: int = 0
+    unknown_count: int = 0
+
+    # Primary collections for frontend
+    eligible: list[SchemeEvaluationResult] = []
+    unknown: list[SchemeEvaluationResult] = []
+    not_eligible: list[SchemeEvaluationResult] = []
+
+    # Backward compatibility aliases
     eligible_schemes: list[SchemeEvaluationResult] = []
     unknown_schemes: list[SchemeEvaluationResult] = []
     not_eligible_schemes: list[SchemeEvaluationResult] = []
+
+    # High-relevance recommended subset
+    recommended_schemes: list[SchemeEvaluationResult] = []
+
+    # Available taxonomies for multi-dimensional filters
+    categories: list[str] = []
+    departments: list[str] = []
+    benefit_types: list[str] = []
+    education_levels: list[str] = []
+
+    # Metadata
+    citizen_summary: dict[str, Any] | None = None
+    last_evaluated_at: str | None = None
 
 class ProfileCompletenessResponse(BaseModel):
     overall_completeness_pct: float

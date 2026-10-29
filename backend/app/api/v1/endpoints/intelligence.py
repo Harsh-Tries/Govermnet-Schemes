@@ -64,9 +64,10 @@ def match_published_schemes(
     include_all_statuses: bool = Query(False),
     db: Session = Depends(get_db)
 ):
+    profile_data = profile.get("profile") if isinstance(profile, dict) and "profile" in profile else profile
     return SchemeMatchingEngine.match_schemes(
         db=db,
-        profile_data=profile,
+        profile_data=profile_data,
         filter_state=state,
         filter_category_id=category_id,
         filter_beneficiary_id=beneficiary_id,
