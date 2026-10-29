@@ -280,7 +280,7 @@ function AssistantContent() {
       </div>
 
       {/* Main Dark-Blue AI Chat Interface */}
-      <div className="flex-1 flex flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-gov-navy border border-slate-800 rounded-3xl overflow-hidden shadow-2xl min-w-0 text-white relative">
+      <div className="flex-1 flex flex-col bg-slate-950 bg-gradient-to-br from-slate-950 via-slate-900 to-gov-navy border border-slate-800 rounded-3xl overflow-hidden shadow-2xl min-w-0 text-white relative">
         {/* Glow ambient background element */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl pointer-events-none"></div>
 

@@ -10,6 +10,8 @@ module.exports = {
       colors: {
         gov: {
           blue: '#0F4C81',
+          navy: '#0A2540',
+          darkNavy: '#061727',
           lightBlue: '#EBF3FA',
           orange: '#FF9933',
           green: '#138808',
