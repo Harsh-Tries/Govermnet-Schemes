@@ -3,12 +3,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models import Scheme, SchemeVersion, VerificationRecord
-from app.enums import SchemeStatus
+from app.enums import SchemeStatus, UserRole
+from app.core.rbac import require_roles
 from app.services.verification.change_detector import SchemeChangeDetectorService
 
 router = APIRouter(prefix="/verification", tags=["Scheme Verification & Freshness"])
 
-@router.get("/queue")
+@router.get("/queue", dependencies=[Depends(require_roles([UserRole.ADMIN, UserRole.CONTENT_ADMIN, UserRole.VERIFIER]))])
 def get_verification_queue(db: Session = Depends(get_db)):
     """Retrieve schemes requiring human verification or review."""
     pending_schemes = db.query(Scheme).filter(
@@ -48,7 +49,7 @@ def get_scheme_version_history(scheme_id: str, db: Session = Depends(get_db)):
         for v in versions
     ]
 
-@router.post("/schemes/{scheme_id}/approve")
+@router.post("/schemes/{scheme_id}/approve", dependencies=[Depends(require_roles([UserRole.ADMIN, UserRole.CONTENT_ADMIN, UserRole.VERIFIER]))])
 def approve_and_publish_scheme_changes(scheme_id: str, change_summary: str = "Verified and published by content admin", db: Session = Depends(get_db)):
     """Approve pending changes, create a version snapshot, and publish the scheme."""
     scheme = db.query(Scheme).filter(Scheme.id == scheme_id).first()

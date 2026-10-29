@@ -12,7 +12,9 @@ from app.models import Base
 from app.core.config import settings
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Only set default URL from settings if not explicitly specified via CLI/config
+if not config.get_main_option("sqlalchemy.url"):
+    config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name:
     fileConfig(config.config_file_name)

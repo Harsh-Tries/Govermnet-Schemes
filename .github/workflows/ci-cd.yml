@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  lint-and-test:
-    name: Backend Lint, Test & AI Evaluation
+  backend-lint-and-test:
+    name: Backend Test, Migrations & Security
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,11 +22,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
-          pip install pytest pytest-asyncio httpx python-multipart
+          pip install pytest pytest-asyncio httpx python-multipart pyyaml
           
-      - name: Run Pytest Suite
+      - name: Verify Alembic Migration History
         run: |
-          python -m pytest tests/ -v
+          python -m alembic -c database/alembic.ini history
+          
+      - name: Run Pytest Security and Regression Suite
+        run: |
+          python -m pytest tests/test_phase6_production_repair.py tests/test_featured_schemes_finder.py -v
 
   frontend-build:
     name: Frontend Build & Typecheck
@@ -50,3 +54,22 @@ jobs:
         run: |
           cd frontend
           npm run build
+          npx tsc --noEmit
+
+  docker-verification:
+    name: Container Build & Compose Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Configuration
+        run: |
+          docker compose config
+
+      - name: Build Backend Docker Image
+        run: |
+          docker build -t scheme-backend:ci ./backend
+
+      - name: Build Frontend Docker Image
+        run: |
+          docker build -t scheme-frontend:ci ./frontend

@@ -8,7 +8,8 @@ from app.models import (
     SchemeProfession, SchemeState, SchemeDistrict,
     SchemeUpdate, AuditLog, BeneficiaryType, SchemeCategory
 )
-from app.enums import GovernmentLevel, SchemeType, SchemeStatus, AuditAction
+from app.enums import GovernmentLevel, SchemeType, SchemeStatus, AuditAction, UserRole
+from app.core.rbac import require_roles
 from app.schemas.scheme import SchemeCreate, SchemeUpdateSchema, SchemeResponse
 
 router = APIRouter()
@@ -143,7 +144,7 @@ def get_scheme_by_id(scheme_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Scheme not found.")
     return scheme
 
-@router.post("/schemes", response_model=SchemeResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/schemes", response_model=SchemeResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_roles([UserRole.ADMIN, UserRole.CONTENT_ADMIN]))])
 def create_scheme(payload: SchemeCreate, db: Session = Depends(get_db)):
     existing = db.query(Scheme).filter(Scheme.slug == payload.slug).first()
     if existing:
@@ -187,7 +188,7 @@ def create_scheme(payload: SchemeCreate, db: Session = Depends(get_db)):
     db.refresh(scheme)
     return scheme
 
-@router.put("/schemes/{scheme_id}", response_model=SchemeResponse)
+@router.put("/schemes/{scheme_id}", response_model=SchemeResponse, dependencies=[Depends(require_roles([UserRole.ADMIN, UserRole.CONTENT_ADMIN]))])
 def update_scheme(scheme_id: str, payload: SchemeUpdateSchema, db: Session = Depends(get_db)):
     scheme = db.query(Scheme).filter(Scheme.id == scheme_id).first()
     if not scheme:

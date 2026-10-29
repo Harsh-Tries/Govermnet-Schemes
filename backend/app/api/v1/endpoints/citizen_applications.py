@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.application_tracking import CitizenApplication, ApplicationStatusHistory
 from app.models import Scheme
+from app.models.user import User
+from app.enums import UserRole
+from app.core.auth import get_optional_current_user
 from app.schemas.citizen_application import (
     CitizenApplicationCreate, CitizenApplicationStatusUpdate,
     CitizenApplicationResponse
@@ -12,12 +15,19 @@ from app.schemas.citizen_application import (
 router = APIRouter(tags=["Citizen Applications"])
 
 @router.post("/applications", response_model=CitizenApplicationResponse, status_code=status.HTTP_201_CREATED)
-def create_citizen_application(data: CitizenApplicationCreate, db: Session = Depends(get_db)):
+def create_citizen_application(
+    data: CitizenApplicationCreate,
+    current_user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db)
+):
     scheme = db.query(Scheme).filter(Scheme.id == data.scheme_id).first()
     if not scheme:
         raise HTTPException(status_code=404, detail="Scheme not found")
 
+    user_id = current_user.id if current_user else "demo-citizen-user"
+
     app_rec = CitizenApplication(
+        user_id=user_id,
         scheme_id=data.scheme_id,
         application_reference=data.application_reference,
         application_date=data.application_date or datetime.utcnow(),
@@ -47,8 +57,23 @@ def create_citizen_application(data: CitizenApplicationCreate, db: Session = Dep
     return resp
 
 @router.get("/applications", response_model=list[CitizenApplicationResponse])
-def list_citizen_applications(db: Session = Depends(get_db)):
-    apps = db.query(CitizenApplication).order_by(CitizenApplication.created_at.desc()).all()
+def list_citizen_applications(
+    current_user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    List citizen applications.
+    IDOR Security Guarantee: Ordinary citizens can only list their own applications.
+    Administrators can view all applications.
+    """
+    query = db.query(CitizenApplication)
+    is_admin = current_user and current_user.role in [UserRole.ADMIN.value, UserRole.SYSTEM_ADMIN.value]
+
+    if not is_admin:
+        user_id = current_user.id if current_user else "demo-citizen-user"
+        query = query.filter(CitizenApplication.user_id == user_id)
+
+    apps = query.order_by(CitizenApplication.created_at.desc()).all()
     results = []
     for a in apps:
         resp = CitizenApplicationResponse.model_validate(a)
@@ -58,20 +83,46 @@ def list_citizen_applications(db: Session = Depends(get_db)):
     return results
 
 @router.get("/applications/{id}", response_model=CitizenApplicationResponse)
-def get_citizen_application(id: str, db: Session = Depends(get_db)):
+def get_citizen_application(
+    id: str,
+    current_user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get citizen application by ID.
+    IDOR Security Guarantee: Prevents unauthorized cross-account access.
+    """
     a = db.query(CitizenApplication).filter(CitizenApplication.id == id).first()
     if not a:
         raise HTTPException(status_code=404, detail="Application not found")
+
+    is_admin = current_user and current_user.role in [UserRole.ADMIN.value, UserRole.SYSTEM_ADMIN.value]
+    if not is_admin:
+        user_id = current_user.id if current_user else "demo-citizen-user"
+        if a.user_id and a.user_id != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this citizen application.")
+
     resp = CitizenApplicationResponse.model_validate(a)
     if a.scheme:
         resp.scheme_name = a.scheme.name
     return resp
 
 @router.put("/applications/{id}/status", response_model=CitizenApplicationResponse)
-def update_application_status(id: str, data: CitizenApplicationStatusUpdate, db: Session = Depends(get_db)):
+def update_application_status(
+    id: str,
+    data: CitizenApplicationStatusUpdate,
+    current_user: User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db)
+):
     a = db.query(CitizenApplication).filter(CitizenApplication.id == id).first()
     if not a:
         raise HTTPException(status_code=404, detail="Application not found")
+
+    is_admin = current_user and current_user.role in [UserRole.ADMIN.value, UserRole.SYSTEM_ADMIN.value]
+    if not is_admin:
+        user_id = current_user.id if current_user else "demo-citizen-user"
+        if a.user_id and a.user_id != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this citizen application.")
 
     old_st = str(a.status.value if hasattr(a.status, 'value') else a.status)
     new_st = str(data.new_status.value if hasattr(data.new_status, 'value') else data.new_status)
