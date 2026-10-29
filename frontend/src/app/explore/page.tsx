@@ -137,34 +137,34 @@ function ExploreContent() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header Banner */}
-      <div className="bg-slate-900 bg-gradient-to-r from-gov-navy via-gov-blue to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      <section className="bg-gradient-to-br from-white via-slate-50 to-gov-lightBlue/40 border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-card relative overflow-hidden">
         <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-emerald-300">
-            <Compass className="w-4 h-4 text-emerald-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
+            <Compass className="w-4 h-4 text-emerald-600" />
             <span>Maharashtra Welfare & Scholarship Directory</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
             Explore Government Schemes
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed max-w-2xl">
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
             Browse verified welfare schemes, student scholarships, agricultural subsidies, and entrepreneurship credit programs. 
             Prioritizing official Maharashtra State Government initiatives alongside Centrally sponsored programs.
           </p>
 
-          <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-300">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-600 font-medium">
+            <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
               100% Grounded in Official .gov.in Sources
             </span>
-            <span className="flex items-center gap-1.5">
-              <Database className="w-4 h-4 text-sky-400" />
+            <span className="flex items-center gap-1.5 text-gov-blue font-semibold">
+              <Database className="w-4 h-4 text-gov-blue" />
               Official Directory
             </span>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Main Filter & Search Control Panel */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">

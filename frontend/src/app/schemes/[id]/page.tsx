@@ -311,7 +311,10 @@ export default function SchemeDetailPage() {
         {/* Right Column (Mandatory Documents & Official Source) */}
         <div className="space-y-6">
           {/* Action CTA Card */}
-          <div className="bg-slate-900 bg-gradient-to-br from-gov-navy to-gov-blue text-white rounded-3xl p-6 shadow-md space-y-4">
+          <div 
+            style={{ backgroundColor: '#0A2540' }}
+            className="bg-slate-900 bg-gradient-to-br from-gov-navy to-gov-blue text-white rounded-3xl p-6 shadow-md space-y-4"
+          >
             <h3 className="text-base font-bold">Apply via Official Portal</h3>
             <p className="text-xs text-blue-100 leading-relaxed">
               Verify your documents and submit your application through the official government portal.
