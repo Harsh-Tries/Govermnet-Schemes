@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   BarChart3,
   Clock,
-  Sparkles
+  Sparkles,
+  UserCheck
 } from 'lucide-react';
 
 interface NavItem {
@@ -28,8 +29,9 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/', icon: Home },
   { label: 'Explore Schemes', href: '/explore', icon: Compass },
+  { label: 'Citizen Onboarding', href: '/onboarding', icon: UserCheck, badge: 'Profile' },
+  { label: 'Personalized Matches', href: '/recommendations', icon: Sparkles, badge: 'Live' },
   { label: 'My Eligibility', href: '/eligibility', icon: CheckCircle2, badge: 'Live' },
-  { label: 'Personalized Matches', href: '/recommendations', icon: Sparkles, badge: 'Phase 6' },
   { label: 'AI Assistant', href: '/assistant', icon: Bot, badge: 'Live' },
   { label: 'Track Applications', href: '/applications', icon: Clock, badge: 'Phase 5' },
   { label: 'Saved Schemes', href: '/saved', icon: Bookmark },

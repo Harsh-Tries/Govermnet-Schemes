@@ -12,6 +12,8 @@ import {
   fetchBookmarkedSchemeIds, 
   toggleSchemeBookmark 
 } from '../services/schemesApi';
+import { authStorage } from '../services/authApi';
+import { fetchProfile, UserProfileData } from '../services/profileApi';
 import { Scheme } from '../types/scheme';
 import { 
   Search, 
@@ -33,6 +35,7 @@ export default function HomePage() {
 
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>('ALL');
+  const [citizenProfile, setCitizenProfile] = useState<UserProfileData | null>(null);
 
   // Filter panel state
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState<boolean>(false);
@@ -70,6 +73,9 @@ export default function HomePage() {
 
   useEffect(() => {
     loadBookmarks();
+    fetchProfile()
+      .then((p) => setCitizenProfile(p))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -134,10 +140,15 @@ export default function HomePage() {
           <div className="pt-2 flex flex-wrap items-center gap-3 text-xs">
             <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-sm text-slate-700">
               <UserCheck className="w-4 h-4 text-emerald-600" />
-              <span>Matching for: <strong>Rohan Sharma</strong> (Student, Pune, Maharashtra • ₹2.2L Income)</span>
+              <span>
+                Matching for: <strong>{citizenProfile?.full_name || 'Rohan Sharma'}</strong> (
+                {citizenProfile?.occupation_type || 'Student'}, {citizenProfile?.district_name || 'Pune'}, Maharashtra • ₹
+                {Number(citizenProfile?.annual_family_income || 220000).toLocaleString('en-IN')} Income)
+              </span>
             </div>
-            <Link href="/eligibility" className="text-gov-blue font-semibold hover:underline text-xs">
-              Check My Eligibility Parameters →
+            <Link href="/onboarding" className="text-gov-blue font-semibold hover:underline text-xs flex items-center gap-1">
+              <span>{citizenProfile?.is_onboarding_completed ? 'Update Citizen Profile' : 'Complete 6-Step Onboarding'}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>

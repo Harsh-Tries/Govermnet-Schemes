@@ -31,6 +31,8 @@ class UserResponse(BaseModel):
     email: str | None
     role: str
     is_active: bool
+    full_name: str | None = None
+    is_onboarding_completed: bool = False
 
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
@@ -93,7 +95,10 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         user={
             "id": user.id,
             "email": user.email,
-            "role": user.role
+            "role": user.role,
+            "full_name": user.profile.full_name if user.profile else None,
+            "is_onboarding_completed": user.profile.is_onboarding_completed if user.profile else False,
+            "onboarding_step": user.profile.onboarding_step if user.profile else 1
         }
     )
 
@@ -121,6 +126,20 @@ def register_citizen(payload: RegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
+    # Initialize UserProfile with full_name if provided
+    profile = UserProfile(
+        user_id=user.id,
+        full_name=payload.full_name.strip() if payload.full_name else None,
+        state_code="IN-MH",
+        is_maharashtra_resident=True,
+        onboarding_step=2 if payload.full_name else 1,
+        is_onboarding_completed=False,
+        beneficiary_categories=[]
+    )
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+
     token = create_access_token(subject=user.id, role=user.role)
     return TokenResponse(
         access_token=token,
@@ -129,7 +148,10 @@ def register_citizen(payload: RegisterRequest, db: Session = Depends(get_db)):
         user={
             "id": user.id,
             "email": user.email,
-            "role": user.role
+            "role": user.role,
+            "full_name": profile.full_name,
+            "is_onboarding_completed": profile.is_onboarding_completed,
+            "onboarding_step": profile.onboarding_step
         }
     )
 
@@ -140,5 +162,7 @@ def get_current_user_profile(current_user: User = Depends(get_current_user)):
         id=current_user.id,
         email=current_user.email,
         role=current_user.role,
-        is_active=current_user.is_active
+        is_active=current_user.is_active,
+        full_name=current_user.profile.full_name if current_user.profile else None,
+        is_onboarding_completed=current_user.profile.is_onboarding_completed if current_user.profile else False
     )
