@@ -30,7 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Explore Schemes', href: '/explore', icon: Compass },
   { label: 'My Eligibility', href: '/eligibility', icon: CheckCircle2, badge: 'Live' },
   { label: 'Personalized Matches', href: '/recommendations', icon: Sparkles, badge: 'Phase 6' },
-  { label: 'AI Assistant', href: '/chat', icon: Bot, badge: 'Phase 4 AI' },
+  { label: 'AI Assistant', href: '/assistant', icon: Bot, badge: 'Live' },
   { label: 'Track Applications', href: '/applications', icon: Clock, badge: 'Phase 5' },
   { label: 'Saved Schemes', href: '/saved', icon: Bookmark },
   { label: 'Admin Portal', href: '/admin', icon: ShieldCheck, badge: 'Phase 2' },
@@ -100,14 +100,14 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer Support */}
-      <div className="p-4 border-t border-slate-100 text-xs text-slate-500">
-        <div className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors">
-          <HelpCircle className="w-4 h-4 text-slate-400" />
-          <span>Help & Guidelines</span>
+      {/* Support & Citizen Help */}
+      <div className="p-4 border-t border-slate-200/80 space-y-2">
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <span>Toll-Free Helpline</span>
+          <span className="font-bold text-gov-blue">1800-120-8040</span>
         </div>
-        <p className="text-[10px] text-slate-400 mt-2 px-3">
-          © 2026 Govt Scheme Assistant
+        <p className="text-[10px] text-slate-400">
+          Government of Maharashtra citizen facilitation portal.
         </p>
       </div>
     </aside>

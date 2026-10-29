@@ -115,6 +115,14 @@ class MockLocalProvider(LLMProvider):
                     "- **MahaDBT Krishi Yantrikikaran Yojna**: 40%–50% subsidy on farm implements and tractors.\n"
                     "- **Dr. Babasaheb Ambedkar Krushi Swavalamban Yojana**: Up to ₹4,00,000 grant for new wells for SC farmers."
                 )
+            elif "entrepreneur" in last_user_msg or "business" in last_user_msg or "msme" in last_user_msg:
+                return (
+                    "Based on verified government records, key assistance schemes for entrepreneurs and MSMEs in Maharashtra include:\n"
+                    "- **Chief Minister Employment Generation Programme (CMEGP - Maharashtra)**: Financial assistance up to ₹50 Lakhs for manufacturing and ₹10 Lakhs for services with 15%–35% subsidy.\n"
+                    "- **Prime Minister's Employment Generation Programme (PMEGP)**: Credit-linked subsidy up to ₹50 Lakhs for setting up micro-enterprises.\n"
+                    "- **Pradhan Mantri MUDRA Yojana**: Collateral-free micro loans up to ₹10 Lakhs (Shishu, Kishore, Tarun).\n"
+                    "- **Stand-Up India Scheme**: Bank loans between ₹10 Lakhs and ₹1 Crore for SC/ST and women entrepreneurs."
+                )
             elif "ladki bahin" in last_user_msg:
                 return (
                     "**Mukhyamantri Majhi Ladki Bahin Yojana** provides ₹1,500 monthly DBT (₹18,000 annually) "
@@ -138,13 +146,49 @@ class MockLocalProvider(LLMProvider):
 
         # Standard fallback responses
         if "scholarship" in last_user_msg or "student" in last_user_msg:
-            return "Based on verified government records, we found matching scholarships for students in Maharashtra."
-        elif "farmer" in last_user_msg or "kisan" in last_user_msg:
-            return "Based on verified government records, PM-KISAN and Namo Shetkari provide income support to eligible farmers in Maharashtra."
+            return (
+                "Based on verified Maharashtra Government records, key scholarships for students include:\n"
+                "- **Rajarshi Chhatrapati Shahu Maharaj Shikshan Shulkh Shishyavrutti Yojna (EBC)**: 50%–100% Tuition fee waiver on MahaDBT.\n"
+                "- **Government of India Post-Matric Scholarship for SC Students (Maharashtra)**: Full tuition waiver & maintenance allowance.\n"
+                "- **Post-Matric Scholarship for VJNT, OBC and SBC Students** on MahaDBT.\n"
+                "- **Dr. Panjabrao Deshmukh Vasatgruh Nirvah Bhatta Yojna**: Hostel allowance up to ₹60,000/year."
+            )
+        elif "farmer" in last_user_msg or "kisan" in last_user_msg or "agriculture" in last_user_msg:
+            return (
+                "Based on verified government records, major welfare schemes for Maharashtra farmers include:\n"
+                "- **Namo Shetkari Mahasanman Nidhi Yojana (NSMNY)**: ₹6,000/year direct financial assistance from Maharashtra Govt.\n"
+                "- **Pradhan Mantri Kisan Samman Nidhi (PM-KISAN)**: ₹6,000/year Central income support (combined ₹12,000/year).\n"
+                "- **MahaDBT Krishi Yantrikikaran Yojna**: 40%–50% subsidy on agricultural implements and tractors.\n"
+                "- **Dr. Babasaheb Ambedkar Krushi Swavalamban Yojana**: Up to ₹4 Lakh grant for new irrigation wells."
+            )
+        elif "entrepreneur" in last_user_msg or "msme" in last_user_msg or "business" in last_user_msg:
+            return (
+                "Based on verified government records, key initiatives for entrepreneurs and MSMEs in Maharashtra include:\n"
+                "- **Chief Minister Employment Generation Programme (CMEGP)**: Margin money subsidy up to 35% on projects up to ₹50 Lakhs.\n"
+                "- **Prime Minister's Employment Generation Programme (PMEGP)**: Credit-linked subsidy for new micro-enterprises.\n"
+                "- **Pradhan Mantri MUDRA Yojana**: Loans up to ₹10 Lakhs without collateral for micro-enterprises.\n"
+                "- **Stand-Up India Scheme**: Funding up to ₹1 Crore for SC/ST and women-led enterprises."
+            )
         elif "document" in last_user_msg:
-            return "Required documents include Aadhaar Card, Income Certificate, and Domicile Certificate."
+            return (
+                "Based on verified Maharashtra Government guidelines, required documents typically include:\n"
+                "1. **Aadhaar Card** (linked to bank account for DBT).\n"
+                "2. **Maharashtra Domicile Certificate** issued by Tahsildar / MahaOnline.\n"
+                "3. **Tahsildar Income Certificate** (current financial year).\n"
+                "4. **Caste Certificate & Validity Certificate** (for reserved categories on MahaDBT).\n"
+                "5. **Land Records (7/12 & 8-A)** (for agriculture/farmer schemes) or **Bonafide / Marksheet** (for student scholarships)."
+            )
+        elif "eligibility" in last_user_msg or "eligible" in last_user_msg:
+            return (
+                "To evaluate your eligibility deterministically using our Phase 3 rules engine, please share your details:\n"
+                "- **Age & Gender** (e.g. 21, Female)\n"
+                "- **Category** (e.g. OBC, SC, ST, EBC, General)\n"
+                "- **Annual Family Income** (e.g. ₹2,00,000)\n"
+                "- **Occupation & Domicile** (e.g. Student in Maharashtra, Farmer, Entrepreneur)\n\n"
+                "You can also ask directly about any scheme, e.g. *'Am I eligible for Ladki Bahin Yojana?'* or *'Eligibility for Rajarshi Shahu Maharaj scholarship'*."
+            )
         elif "apply" in last_user_msg:
-            return "Applications can be submitted on the official government portal."
+            return "Applications can be submitted on the official government portal (e.g., MahaDBT portal or scheme portal)."
         elif "why am i not eligible" in last_user_msg or "not eligible" in last_user_msg:
             return "You do not meet the eligibility requirements for age or annual family income."
         else:
@@ -186,10 +230,10 @@ class MockLocalProvider(LLMProvider):
             elif "why" in last_user_msg and ("eligible" in last_user_msg or "qualify" in last_user_msg or "rejected" in last_user_msg):
                 intent = "WHY_NOT_ELIGIBLE"
             # Check eligibility
-            elif any(w in last_user_msg for w in ["am i eligible", "eligibility", "do i qualify", "can i apply", "is eligible", "who is eligible"]):
+            elif any(w in last_user_msg for w in ["am i eligible", "eligibility", "do i qualify", "can i apply", "is eligible", "who is eligible", "check my eligibility"]):
                 intent = "ELIGIBILITY_CHECK"
             # Check documents
-            elif any(w in last_user_msg for w in ["document", "documents", "papers", "certificates", "what do i need"]):
+            elif any(w in last_user_msg for w in ["document", "documents", "papers", "certificates", "what do i need", "what documents"]):
                 intent = "DOCUMENT_QUERY"
             # Check application guidance
             elif any(w in last_user_msg for w in ["how to apply", "application procedure", "application process", "where to apply", "steps to apply", "submit application"]):
@@ -201,7 +245,7 @@ class MockLocalProvider(LLMProvider):
             elif "compare" in last_user_msg or "difference between" in last_user_msg:
                 intent = "COMPARE_SCHEMES"
             # Check scheme search
-            elif any(w in last_user_msg for w in ["scholarship", "schemes", "find", "list", "search", "available", "farmer", "student", "women"]):
+            elif any(w in last_user_msg for w in ["scholarship", "schemes", "find", "list", "search", "available", "farmer", "student", "women", "entrepreneur", "msme"]):
                 intent = "SCHEME_SEARCH"
 
             return response_model(

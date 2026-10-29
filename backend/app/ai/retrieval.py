@@ -1,10 +1,12 @@
+import re
 from typing import Any
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload, selectinload
 from app.enums import SchemeStatus, GovernmentLevel
 from app.models import (
     Scheme, SchemeCategoryMap, SchemeCategory,
-    SchemeProfession, SchemeBeneficiary, SchemeState
+    SchemeProfession, SchemeBeneficiary, SchemeState,
+    BeneficiaryType
 )
 
 class SchemeRetriever:
@@ -33,42 +35,102 @@ class SchemeRetriever:
 
         if query:
             clean_q = query.strip()
-            terms = [f"%{w.lower()}%" for w in clean_q.split() if len(w) > 1]
-            if not terms:
-                terms = [f"%{clean_q.lower()}%"]
+            # Stop words to ignore when splitting into keywords
+            stop_words = {
+                "find", "schemes", "scheme", "for", "what", "which", "are", 
+                "the", "available", "all", "me", "my", "is", "in", "to", 
+                "and", "of", "do", "i", "need", "about", "show", "get", "give"
+            }
+            words = [w.lower() for w in re.findall(r"\b[a-zA-Z0-9_\-]+\b", clean_q)]
+            meaningful_words = [w for w in words if w not in stop_words and len(w) > 2]
             
+            raw_tokens = meaningful_words if meaningful_words else words
+            if not raw_tokens:
+                raw_tokens = [clean_q.lower()]
+
+            terms = set()
+            for t in raw_tokens:
+                terms.add(t)
+                # Handle plurals/singulars
+                if t.endswith("ies") and len(t) > 4:
+                    terms.add(t[:-3] + "y")
+                elif t.endswith("s") and len(t) > 3:
+                    terms.add(t[:-1])
+                elif not t.endswith("s"):
+                    terms.add(t + "s")
+
             filters = []
-            for t in terms:
-                filters.append(Scheme.name.ilike(t))
-                filters.append(Scheme.short_description.ilike(t))
-                filters.append(Scheme.description.ilike(t))
-                filters.append(Scheme.slug.ilike(t))
-                filters.append(Scheme.administering_ministry.ilike(t))
+            for term in terms:
+                pattern = f"%{term}%"
+                filters.append(Scheme.name.ilike(pattern))
+                filters.append(Scheme.short_description.ilike(pattern))
+                filters.append(Scheme.description.ilike(pattern))
+                filters.append(Scheme.slug.ilike(pattern))
+                filters.append(Scheme.administering_ministry.ilike(pattern))
+                filters.append(
+                    Scheme.categories.any(
+                        SchemeCategoryMap.category.has(
+                            or_(
+                                SchemeCategory.name.ilike(pattern),
+                                SchemeCategory.code.ilike(pattern)
+                            )
+                        )
+                    )
+                )
+                filters.append(
+                    Scheme.beneficiaries.any(
+                        SchemeBeneficiary.beneficiary_type.has(
+                            or_(
+                                BeneficiaryType.name.ilike(pattern),
+                                BeneficiaryType.code.ilike(pattern)
+                            )
+                        )
+                    )
+                )
+
             q = q.filter(or_(*filters))
 
         if state_code:
             norm_state = "IN-MH" if state_code.upper() in ["MH", "IN-MH", "MAHARASHTRA"] else state_code
             # Match either explicitly linked state or Central schemes available nationwide/in state
-            q = q.outerjoin(SchemeState, Scheme.id == SchemeState.scheme_id).filter(
+            q = q.filter(
                 or_(
-                    SchemeState.state_code.ilike(norm_state),
+                    Scheme.states.any(SchemeState.state_code.ilike(norm_state)),
                     Scheme.government_level == GovernmentLevel.CENTRAL
                 )
             )
 
         if category:
-            q = q.outerjoin(SchemeCategoryMap).filter(
+            q = q.filter(
                 or_(
-                    SchemeCategoryMap.category_id.ilike(f"%{category}%"),
+                    Scheme.categories.any(
+                        or_(
+                            SchemeCategoryMap.category_id.ilike(f"%{category}%"),
+                            SchemeCategoryMap.category.has(
+                                or_(
+                                    SchemeCategory.name.ilike(f"%{category}%"),
+                                    SchemeCategory.code.ilike(f"%{category}%")
+                                )
+                            )
+                        )
+                    ),
                     Scheme.description.ilike(f"%{category}%"),
                     Scheme.short_description.ilike(f"%{category}%")
                 )
             )
 
         if profession:
-            q = q.outerjoin(SchemeProfession).filter(
+            q = q.filter(
                 or_(
-                    SchemeProfession.profession_id.ilike(f"%{profession}%"),
+                    Scheme.professions.any(SchemeProfession.profession_id.ilike(f"%{profession}%")),
+                    Scheme.beneficiaries.any(
+                        SchemeBeneficiary.beneficiary_type.has(
+                            or_(
+                                BeneficiaryType.code.ilike(f"%{profession}%"),
+                                BeneficiaryType.name.ilike(f"%{profession}%")
+                            )
+                        )
+                    ),
                     Scheme.description.ilike(f"%{profession}%"),
                     Scheme.short_description.ilike(f"%{profession}%"),
                     Scheme.name.ilike(f"%{profession}%")
@@ -76,9 +138,19 @@ class SchemeRetriever:
             )
 
         if beneficiary_type:
-            q = q.outerjoin(SchemeBeneficiary).filter(
+            q = q.filter(
                 or_(
-                    SchemeBeneficiary.beneficiary_type_id.ilike(f"%{beneficiary_type}%"),
+                    Scheme.beneficiaries.any(
+                        or_(
+                            SchemeBeneficiary.beneficiary_type_id.ilike(f"%{beneficiary_type}%"),
+                            SchemeBeneficiary.beneficiary_type.has(
+                                or_(
+                                    BeneficiaryType.code.ilike(f"%{beneficiary_type}%"),
+                                    BeneficiaryType.name.ilike(f"%{beneficiary_type}%")
+                                )
+                            )
+                        )
+                    ),
                     Scheme.description.ilike(f"%{beneficiary_type}%"),
                     Scheme.short_description.ilike(f"%{beneficiary_type}%")
                 )

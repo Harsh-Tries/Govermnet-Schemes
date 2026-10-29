@@ -1,271 +1,351 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { MOCK_SCHEMES } from '../../data/mockSchemes';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { SchemeCard } from '../../components/dashboard/SchemeCard';
-import { Scheme, GovernmentLevel } from '../../types/scheme';
-import { Compass, Search, RefreshCw, Database, Sparkles, Filter } from 'lucide-react';
+import { Scheme } from '../../types/scheme';
+import { 
+  fetchPublishedSchemes, 
+  fetchBookmarkedSchemeIds, 
+  toggleSchemeBookmark 
+} from '../../services/schemesApi';
+import { 
+  Compass, 
+  Search, 
+  RefreshCw, 
+  Database, 
+  Filter, 
+  SlidersHorizontal, 
+  RotateCcw,
+  AlertCircle,
+  ExternalLink,
+  ShieldCheck,
+  CheckCircle2
+} from 'lucide-react';
 
-interface BackendScheme {
-  id: string;
-  slug: string;
-  name: string;
-  short_description: string;
-  description: string | null;
-  government_level: string;
-  scheme_type: string;
-  administering_ministry: string | null;
-  categories: Array<{ id: string; code: string; name: string }>;
-  beneficiaries: Array<{ id: string; code: string; name: string }>;
-  benefits: Array<{
-    title: string;
-    amount: number | null;
-    amount_unit: string | null;
-    frequency: string | null;
-  }>;
-  application_process: {
-    official_application_url: string | null;
-  } | null;
-  sources: Array<{
-    source: {
-      url: string;
-      title: string;
-    };
-  }>;
-}
+const BENEFICIARY_TABS = [
+  { id: 'ALL', label: 'All Schemes' },
+  { id: 'STUDENT', label: 'Students' },
+  { id: 'FARMER', label: 'Farmers' },
+  { id: 'ENTREPRENEUR', label: 'MSME' },
+  { id: 'PWD', label: 'PwD' },
+];
 
-export default function ExplorePage() {
+const GOVERNMENT_LEVELS = [
+  { id: 'ALL', label: 'All Government Levels' },
+  { id: 'STATE', label: 'Maharashtra State Government' },
+  { id: 'CENTRALLY_SPONSORED', label: 'Centrally Sponsored Schemes' },
+  { id: 'CENTRAL', label: 'Central Government Initiatives' },
+];
+
+const SORT_OPTIONS = [
+  { id: 'state_first', label: 'State Schemes First (Default)' },
+  { id: 'name_asc', label: 'Scheme Name (A to Z)' },
+  { id: 'name_desc', label: 'Scheme Name (Z to A)' },
+  { id: 'recently_verified', label: 'Recently Verified' },
+];
+
+function ExploreContent() {
+  const searchParams = useSearchParams();
+
+  // Search & Filter State
+  const initialSearch = searchParams.get('search') || searchParams.get('q') || '';
+  const initialBeneficiary = searchParams.get('beneficiary') || 'ALL';
+  const initialLevel = searchParams.get('level') || 'ALL';
+
+  const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
+  const [selectedBeneficiary, setSelectedBeneficiary] = useState<string>(initialBeneficiary);
+  const [selectedLevel, setSelectedLevel] = useState<string>(initialLevel);
+  const [sortBy, setSortBy] = useState<string>('state_first');
+
+  // Scheme Data State
   const [schemes, setSchemes] = useState<Scheme[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isLiveApi, setIsLiveApi] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedState, setSelectedState] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
 
-  const fetchSchemes = async () => {
-    setLoading(true);
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
-
+  // Load Bookmarks
+  const loadBookmarks = useCallback(async () => {
     try {
-      const res = await fetch(`${apiBase}/schemes`);
-      if (!res.ok) throw new Error('API request failed');
-      const data: BackendScheme[] = await res.json();
-
-      if (Array.isArray(data) && data.length > 0) {
-        const mapped: Scheme[] = data.map((s) => {
-          // Determine best representative benefit amount string
-          let benefitStr = 'Aid as per Govt Norms';
-          if (s.benefits && s.benefits.length > 0) {
-            const b = s.benefits[0];
-            if (b.amount !== null && b.amount > 0) {
-              benefitStr = `Up to ₹${b.amount.toLocaleString('en-IN')}${b.frequency ? ` (${b.frequency})` : ''}`;
-            } else if (b.title) {
-              benefitStr = b.title;
-            }
-          }
-
-          const officialUrl =
-            s.application_process?.official_application_url ||
-            (s.sources && s.sources.length > 0 ? s.sources[0].source.url : 'https://mahadbt.maharashtra.gov.in');
-
-          return {
-            id: s.slug || s.id,
-            code: s.slug,
-            title: s.name,
-            summary: s.short_description,
-            ministry: s.administering_ministry || 'Government of Maharashtra',
-            level: s.government_level as GovernmentLevel,
-            state: s.government_level === 'STATE' ? 'Maharashtra' : 'All India / Maharashtra',
-            categories: s.categories.map((c) => c.name as any),
-            beneficiaries: s.beneficiaries.map((b) => b.name as any),
-            benefitAmount: benefitStr,
-            officialUrl: officialUrl,
-            verified: true,
-            verificationDate: 'October 2026',
-            eligibilityStatus: 'FULLY_ELIGIBLE'
-          };
-        });
-
-        setSchemes(mapped);
-        setIsLiveApi(true);
-      } else {
-        setSchemes(MOCK_SCHEMES);
-        setIsLiveApi(false);
-      }
+      const ids = await fetchBookmarkedSchemeIds('demo-citizen-user');
+      setBookmarkedIds(ids);
     } catch (err) {
-      console.warn('Backend API unavailable, falling back to mock catalog:', err);
-      setSchemes(MOCK_SCHEMES);
-      setIsLiveApi(false);
+      console.warn('Unable to load user bookmarks:', err);
+    }
+  }, []);
+
+  // Load Schemes from Backend API
+  const loadSchemes = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const results = await fetchPublishedSchemes({
+        search: searchQuery.trim() || undefined,
+        beneficiary: selectedBeneficiary !== 'ALL' ? selectedBeneficiary : undefined,
+        governmentLevel: selectedLevel !== 'ALL' ? selectedLevel : undefined,
+        sortBy: sortBy
+      });
+      setSchemes(results);
+    } catch (err: any) {
+      console.error('Failed to load explore schemes:', err);
+      setError('Unable to load schemes from the database. Please verify your connection.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, selectedBeneficiary, selectedLevel, sortBy]);
 
   useEffect(() => {
-    fetchSchemes();
-  }, []);
+    loadBookmarks();
+  }, [loadBookmarks]);
 
-  const filteredSchemes = useMemo(() => {
-    return schemes.filter((scheme) => {
-      // Text search
-      const q = searchQuery.toLowerCase().trim();
-      const schemeTitle = scheme.title || scheme.name || '';
-      const schemeSummary = scheme.summary || scheme.short_description || '';
-      const schemeMinistry = scheme.ministry || scheme.administering_ministry || '';
+  useEffect(() => {
+    loadSchemes();
+  }, [loadSchemes]);
 
-      const matchesSearch =
-        !q ||
-        schemeTitle.toLowerCase().includes(q) ||
-        schemeSummary.toLowerCase().includes(q) ||
-        schemeMinistry.toLowerCase().includes(q);
+  // Handle Bookmark Toggle
+  const handleBookmarkToggle = async (schemeId: string) => {
+    const isCurrentlyBookmarked = bookmarkedIds.includes(schemeId);
 
-      // State filter
-      const matchesState =
-        !selectedState ||
-        (selectedState === 'IN-MH' && (scheme.state?.includes('Maharashtra') || scheme.government_level === 'STATE' || scheme.level === 'STATE' || scheme.level === 'CENTRAL' || scheme.government_level === 'CENTRAL')) ||
-        (selectedState === 'IN-MP' && scheme.state?.includes('Madhya Pradesh')) ||
-        (selectedState === 'IN-TN' && scheme.state?.includes('Tamil Nadu'));
+    // Optimistic Update
+    setBookmarkedIds((prev) =>
+      isCurrentlyBookmarked ? prev.filter((id) => id !== schemeId) : [...prev, schemeId]
+    );
 
-      // Category filter
-      const matchesCategory =
-        !selectedCategory ||
-        scheme.categories.some((c) => {
-          const catName = typeof c === 'string' ? c : (c.name || c.code || '');
-          return catName.toLowerCase().includes(selectedCategory.toLowerCase());
-        });
+    const isNowBookmarked = await toggleSchemeBookmark(
+      schemeId,
+      isCurrentlyBookmarked,
+      'demo-citizen-user'
+    );
 
-      return matchesSearch && matchesState && matchesCategory;
-    });
-  }, [schemes, searchQuery, selectedState, selectedCategory]);
+    // Synchronize if response differs
+    if (isNowBookmarked !== !isCurrentlyBookmarked) {
+      setBookmarkedIds((prev) =>
+        isNowBookmarked ? [...prev, schemeId] : prev.filter((id) => id !== schemeId)
+      );
+    }
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setSelectedBeneficiary('ALL');
+    setSelectedLevel('ALL');
+    setSortBy('state_first');
+  };
+
+  const isFiltered = searchQuery.trim() !== '' || selectedBeneficiary !== 'ALL' || selectedLevel !== 'ALL' || sortBy !== 'state_first';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <Compass className="w-6 h-6 text-gov-blue" />
+      <div className="bg-gradient-to-r from-gov-navy via-gov-blue to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="relative z-10 max-w-3xl space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-emerald-300">
+            <Compass className="w-4 h-4 text-emerald-400" />
+            <span>Maharashtra Welfare & Scholarship Directory</span>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
             Explore Government Schemes
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Browse verified scheme taxonomy across Maharashtra and Centrally-sponsored initiatives
+
+          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed max-w-2xl">
+            Browse verified welfare schemes, student scholarships, agricultural subsidies, and entrepreneurship credit programs. 
+            Prioritizing official Maharashtra State Government initiatives alongside Centrally sponsored programs.
           </p>
+
+          <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-300">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              100% Grounded in Official .gov.in Sources
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Database className="w-4 h-4 text-sky-400" />
+              Live Knowledge Base
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Filter & Search Control Panel */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
+        {/* Search Bar + Sort Row */}
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by scheme name, keyword, department, or beneficiary (e.g. Ladki Bahin, Namo Shetkari, EBC, PM-KISAN)..."
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-gov-blue focus:ring-2 focus:ring-gov-blue/10 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
+            />
+          </div>
+
+          <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+            {/* Government Level Dropdown */}
+            <select
+              value={selectedLevel}
+              onChange={(e) => setSelectedLevel(e.target.value)}
+              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 outline-none focus:border-gov-blue hover:bg-slate-100 transition-colors"
+            >
+              {GOVERNMENT_LEVELS.map((lvl) => (
+                <option key={lvl.id} value={lvl.id}>
+                  {lvl.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 outline-none focus:border-gov-blue hover:bg-slate-100 transition-colors"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Refresh Button */}
+            <button
+              onClick={loadSchemes}
+              disabled={loading}
+              className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-all shrink-0"
+              title="Refresh Scheme Catalog"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {isLiveApi ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">
-              <Database className="w-3.5 h-3.5 text-emerald-600" />
-              Live Knowledge Base ({schemes.length} schemes)
+        {/* Beneficiary Category Pills Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">
+              Beneficiary:
             </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 border border-slate-200">
-              Offline Catalog Mode
-            </span>
+            {BENEFICIARY_TABS.map((tab) => {
+              const isSelected = selectedBeneficiary === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setSelectedBeneficiary(tab.id)}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${
+                    isSelected
+                      ? 'bg-gov-blue text-white shadow-sm shadow-gov-blue/20'
+                      : 'bg-slate-100 hover:bg-slate-200/70 text-slate-700 border border-transparent'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Reset Filters action */}
+          {isFiltered && (
+            <button
+              onClick={handleResetFilters}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline transition-colors ml-auto"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Filters</span>
+            </button>
           )}
-          <button
-            onClick={fetchSchemes}
-            disabled={loading}
-            className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
-            title="Refresh Scheme Catalog"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search verified schemes by name, keyword, or department..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-gov-blue transition-colors"
-          />
-        </div>
-        <div className="flex gap-2">
-          <select
-            value={selectedState}
-            onChange={(e) => setSelectedState(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 outline-none focus:border-gov-blue"
-          >
-            <option value="">All States / UTs</option>
-            <option value="IN-MH">Maharashtra (Verified)</option>
-            <option value="IN-MP">Madhya Pradesh</option>
-            <option value="IN-TN">Tamil Nadu</option>
-          </select>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 outline-none focus:border-gov-blue"
-          >
-            <option value="">All Categories</option>
-            <option value="Scholarship">Scholarships & Education</option>
-            <option value="Agriculture">Agriculture & Farming</option>
-            <option value="Women">Women & Children</option>
-            <option value="Health">Healthcare & Insurance</option>
-            <option value="Housing">Housing & Shelter</option>
-            <option value="MSME">MSME & Employment</option>
-            <option value="Social">Social Security & Pensions</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Results Count & Badges */}
+      {/* Results Count Banner */}
       <div className="flex items-center justify-between text-xs text-slate-500 px-1">
         <span>
-          Showing <strong className="text-slate-800">{filteredSchemes.length}</strong> of{' '}
-          <strong className="text-slate-800">{schemes.length}</strong> schemes
+          Showing <strong className="text-slate-800">{schemes.length}</strong> verified government schemes
+          {selectedBeneficiary !== 'ALL' && ` for ${selectedBeneficiary.toLowerCase()}`}
+          {selectedLevel !== 'ALL' && ` (${selectedLevel.replace(/_/g, ' ').toLowerCase()})`}
         </span>
-        {(searchQuery || selectedState || selectedCategory) && (
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setSelectedState('');
-              setSelectedCategory('');
-            }}
-            className="text-gov-blue hover:underline font-medium"
-          >
-            Reset Filters
-          </button>
-        )}
+        <span className="text-[11px] text-slate-400">
+          Bookmarked: <strong className="text-gov-blue">{bookmarkedIds.length}</strong>
+        </span>
       </div>
 
-      {/* Grid or Empty State */}
+      {/* Loading Skeleton */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1, 2, 3, 4, 5, 6].map((n) => (
-            <div key={n} className="h-64 rounded-2xl bg-slate-100 animate-pulse border border-slate-200"></div>
+            <div
+              key={n}
+              className="h-72 rounded-2xl bg-slate-100 animate-pulse border border-slate-200 p-5 space-y-4"
+            >
+              <div className="flex justify-between items-center">
+                <div className="h-5 w-24 bg-slate-200 rounded-md"></div>
+                <div className="h-5 w-8 bg-slate-200 rounded-md"></div>
+              </div>
+              <div className="h-6 w-3/4 bg-slate-200 rounded-md"></div>
+              <div className="h-4 w-1/2 bg-slate-200 rounded-md"></div>
+              <div className="h-14 w-full bg-slate-200 rounded-md"></div>
+              <div className="pt-4 flex justify-between">
+                <div className="h-8 w-20 bg-slate-200 rounded-md"></div>
+                <div className="h-8 w-20 bg-slate-200 rounded-md"></div>
+              </div>
+            </div>
           ))}
         </div>
-      ) : filteredSchemes.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-3">
+      ) : error ? (
+        /* Error State */
+        <div className="bg-rose-50 border border-rose-200 rounded-3xl p-8 text-center space-y-3">
+          <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
+          <h3 className="text-base font-bold text-rose-900">Failed to Load Government Schemes</h3>
+          <p className="text-xs text-rose-700 max-w-md mx-auto">{error}</p>
+          <button
+            onClick={loadSchemes}
+            className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+          >
+            Retry Connection
+          </button>
+        </div>
+      ) : schemes.length === 0 ? (
+        /* Empty State */
+        <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-3 shadow-sm">
           <Filter className="w-10 h-10 text-slate-300 mx-auto" />
-          <h3 className="text-base font-bold text-slate-800">No schemes match your filter criteria</h3>
+          <h3 className="text-base font-bold text-slate-800">No schemes found matching your criteria</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Try adjusting your search query, or clear selected state and category filters.
+            Try broadening your search term, clearing beneficiary filters, or selecting All Government Levels.
           </p>
           <button
-            onClick={() => {
-              setSearchQuery('');
-              setSelectedState('');
-              setSelectedCategory('');
-            }}
-            className="px-4 py-2 bg-gov-blue text-white rounded-xl text-xs font-semibold hover:bg-gov-navy transition-colors"
+            onClick={handleResetFilters}
+            className="px-4 py-2 bg-gov-blue text-white rounded-xl text-xs font-semibold hover:bg-gov-navy transition-colors shadow-sm"
           >
             Clear All Filters
           </button>
         </div>
       ) : (
+        /* Schemes Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredSchemes.map((scheme) => (
-            <SchemeCard key={scheme.id} scheme={scheme} />
+          {schemes.map((scheme) => (
+            <SchemeCard
+              key={scheme.id}
+              scheme={scheme}
+              isBookmarked={bookmarkedIds.includes(scheme.id)}
+              onBookmarkToggle={handleBookmarkToggle}
+            />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-slate-500 text-xs animate-pulse">
+          Loading Maharashtra Scheme Directory...
+        </div>
+      }
+    >
+      <ExploreContent />
+    </Suspense>
   );
 }

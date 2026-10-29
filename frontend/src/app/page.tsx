@@ -151,7 +151,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link href="/schemes" className="block">
+          <Link href="/explore" className="block">
             <QuickActionCard
               title="Find Schemes"
               description="Browse all Central and Maharashtra state welfare schemes with advanced filters."
@@ -322,7 +322,7 @@ export default function HomePage() {
         {/* View All Button */}
         <div className="text-center pt-4">
           <Link
-            href="/schemes"
+            href="/explore"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-300 hover:border-gov-blue hover:text-gov-blue text-slate-700 rounded-xl text-xs font-bold transition-all shadow-sm"
           >
             <span>Explore All 26+ Verified Maharashtra Government Schemes</span>

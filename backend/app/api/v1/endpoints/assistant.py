@@ -18,6 +18,7 @@ def get_assistant_status():
     """
     return get_active_provider_info()
 
+@router.post("/chat", response_model=AssistantQueryResponse)
 @router.post("/query", response_model=AssistantQueryResponse)
 async def query_assistant(req: AssistantQueryRequest, db: Session = Depends(get_db)):
     """

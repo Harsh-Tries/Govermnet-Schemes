@@ -46,7 +46,25 @@ export async function sendAssistantQuery(
   conversationId?: string,
   profileOverride?: Record<string, any>
 ): Promise<AssistantQueryResponseDTO> {
-  const res = await fetch(`${API_BASE_URL}/assistant/query`, {
+  try {
+    const res = await fetch(`${API_BASE_URL}/assistant/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
+        conversation_id: conversationId,
+        profile_override: profileOverride
+      })
+    });
+
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    // Attempt fallback to /assistant/query
+  }
+
+  const fallback = await fetch(`${API_BASE_URL}/assistant/query`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -56,12 +74,12 @@ export async function sendAssistantQuery(
     })
   });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
+  if (!fallback.ok) {
+    const err = await fallback.json().catch(() => ({}));
     throw new Error(err.detail || 'Failed to process AI assistant query');
   }
 
-  return await res.json();
+  return await fallback.json();
 }
 
 export async function fetchConversations(): Promise<ConversationDTO[]> {
