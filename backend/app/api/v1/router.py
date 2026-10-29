@@ -6,12 +6,13 @@ from app.api.v1.endpoints import (
     conversations, assistant, voice,
     citizen_applications, analytics, health,
     scheme_verification, integrations, personalization,
-    notifications, user_governance
+    notifications, user_governance, bookmarks
 )
 
 api_router = APIRouter()
 
 api_router.include_router(schemes.router, tags=["schemes"])
+api_router.include_router(bookmarks.router, tags=["bookmarks"])
 api_router.include_router(taxonomy.router, tags=["taxonomy"])
 api_router.include_router(eligibility.router, tags=["eligibility"])
 api_router.include_router(benefits.router, tags=["benefits"])

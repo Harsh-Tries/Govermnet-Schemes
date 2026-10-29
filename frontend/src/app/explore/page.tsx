@@ -109,23 +109,30 @@ export default function ExplorePage() {
     return schemes.filter((scheme) => {
       // Text search
       const q = searchQuery.toLowerCase().trim();
+      const schemeTitle = scheme.title || scheme.name || '';
+      const schemeSummary = scheme.summary || scheme.short_description || '';
+      const schemeMinistry = scheme.ministry || scheme.administering_ministry || '';
+
       const matchesSearch =
         !q ||
-        scheme.title.toLowerCase().includes(q) ||
-        scheme.summary.toLowerCase().includes(q) ||
-        scheme.ministry.toLowerCase().includes(q);
+        schemeTitle.toLowerCase().includes(q) ||
+        schemeSummary.toLowerCase().includes(q) ||
+        schemeMinistry.toLowerCase().includes(q);
 
       // State filter
       const matchesState =
         !selectedState ||
-        (selectedState === 'IN-MH' && (scheme.state?.includes('Maharashtra') || scheme.level === 'CENTRAL')) ||
+        (selectedState === 'IN-MH' && (scheme.state?.includes('Maharashtra') || scheme.government_level === 'STATE' || scheme.level === 'STATE' || scheme.level === 'CENTRAL' || scheme.government_level === 'CENTRAL')) ||
         (selectedState === 'IN-MP' && scheme.state?.includes('Madhya Pradesh')) ||
         (selectedState === 'IN-TN' && scheme.state?.includes('Tamil Nadu'));
 
       // Category filter
       const matchesCategory =
         !selectedCategory ||
-        scheme.categories.some((c) => c.toLowerCase().includes(selectedCategory.toLowerCase()));
+        scheme.categories.some((c) => {
+          const catName = typeof c === 'string' ? c : (c.name || c.code || '');
+          return catName.toLowerCase().includes(selectedCategory.toLowerCase());
+        });
 
       return matchesSearch && matchesState && matchesCategory;
     });

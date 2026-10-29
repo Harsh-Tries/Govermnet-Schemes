@@ -1,6 +1,6 @@
 from app.db.base import Base
 from app.models.taxonomy import State, District, SchemeCategory, BeneficiaryType, Profession
-from app.models.user import User, UserProfile
+from app.models.user import User, UserProfile, UserBookmark
 from app.models.scheme import Scheme, SchemeCategoryMap, SchemeBeneficiary, SchemeProfession, SchemeState, SchemeDistrict
 from app.models.eligibility import EligibilityParameter, EligibilityRuleGroup, EligibilityRule
 from app.models.benefit import SchemeBenefit
@@ -25,6 +25,7 @@ __all__ = [
     "Profession",
     "User",
     "UserProfile",
+    "UserBookmark",
     "Scheme",
     "SchemeCategoryMap",
     "SchemeBeneficiary",

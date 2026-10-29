@@ -11,6 +11,16 @@ class User(Base, UUIDMixin, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     profile: Mapped["UserProfile"] = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    bookmarks: Mapped[list["UserBookmark"]] = relationship("UserBookmark", back_populates="user", cascade="all, delete-orphan")
+
+class UserBookmark(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "user_bookmarks"
+
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    scheme_id: Mapped[str] = mapped_column(String(36), ForeignKey("schemes.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    user: Mapped["User"] = relationship("User", back_populates="bookmarks")
+    scheme: Mapped["Scheme"] = relationship("Scheme")
 
 class UserProfile(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "user_profiles"

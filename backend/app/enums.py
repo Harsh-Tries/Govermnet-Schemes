@@ -3,6 +3,7 @@ import enum
 class GovernmentLevel(str, enum.Enum):
     CENTRAL = "CENTRAL"
     STATE = "STATE"
+    CENTRALLY_SPONSORED = "CENTRALLY_SPONSORED"
     OTHER = "OTHER"
 
 class SchemeType(str, enum.Enum):
