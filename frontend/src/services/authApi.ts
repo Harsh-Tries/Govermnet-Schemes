@@ -50,21 +50,30 @@ export const authStorage = {
 };
 
 export async function loginCitizen(credentials: { email: string; password?: string }): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials)
-  });
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ detail: 'Login failed' }));
-    throw new Error(errorData.detail || `Login error (${res.status})`);
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ detail: 'Login failed' }));
+      throw new Error(errorData.detail || `Login error (${res.status})`);
+    }
+
+    const data: AuthResponse = await res.json();
+    authStorage.setToken(data.access_token);
+    authStorage.setUser(data.user);
+    return data;
+  } catch (err: any) {
+    if (err.name === 'TypeError' && err.message?.toLowerCase().includes('fetch')) {
+      throw new Error(
+        `Cannot connect to backend API (${API_BASE_URL}). If testing locally, open http://localhost:3000 instead of Vercel and ensure the FastAPI backend is running.`
+      );
+    }
+    throw err;
   }
-
-  const data: AuthResponse = await res.json();
-  authStorage.setToken(data.access_token);
-  authStorage.setUser(data.user);
-  return data;
 }
 
 export async function registerCitizen(data: {
@@ -72,21 +81,30 @@ export async function registerCitizen(data: {
   password: string;
   full_name?: string;
 }): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE_URL}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ detail: 'Registration failed' }));
-    throw new Error(errorData.detail || `Registration error (${res.status})`);
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ detail: 'Registration failed' }));
+      throw new Error(errorData.detail || `Registration error (${res.status})`);
+    }
+
+    const authData: AuthResponse = await res.json();
+    authStorage.setToken(authData.access_token);
+    authStorage.setUser(authData.user);
+    return authData;
+  } catch (err: any) {
+    if (err.name === 'TypeError' && err.message?.toLowerCase().includes('fetch')) {
+      throw new Error(
+        `Cannot connect to backend API (${API_BASE_URL}). If testing locally, open http://localhost:3000 instead of Vercel and ensure the FastAPI backend is running.`
+      );
+    }
+    throw err;
   }
-
-  const authData: AuthResponse = await res.json();
-  authStorage.setToken(authData.access_token);
-  authStorage.setUser(authData.user);
-  return authData;
 }
 
 export async function getCurrentUser(): Promise<UserSession | null> {
